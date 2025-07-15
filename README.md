@@ -1,42 +1,111 @@
-*# Kubeflow on GKE Setup
+# Kubeflow on GKE Setup
 
-This repository provides a comprehensive guide and scripts for setting up a production-ready Kubeflow cluster on Google Kubernetes Engine (GKE).
+Deploy Kubeflow on Google Kubernetes Engine (GKE) with Terraform - cost-optimized and automated.
 
 ## Features
 
-- **Automated Installation:** Streamlined scripts to automate the deployment of Kubeflow on GKE.
-- **Production-Ready Configuration:** Best practices and configurations for running Kubeflow in a production environment.
-- **Scalability and Security:** Guidance on scaling your Kubeflow cluster and implementing security measures.
-- **Monitoring and Logging:** Integration with monitoring and logging tools for observability.
+- **🚀 One-command deployment** with auto-configuration
+- **💰 Cost-optimized** with preemptible nodes and autoscaling
+- **🔒 Secure** with private nodes and workload identity
+- **📊 Sample ML pipeline** included
 
-## Prerequisites
+## Quick Start
 
-- Google Cloud Platform (GCP) account with billing enabled.
-- gcloud CLI installed and configured
-- kubectl CLI installed and configured.
+### Prerequisites
 
-## Getting Started
+- GCP account with billing enabled
+- `gcloud`, `terraform`, and `kubectl` installed
 
-1. **Clone the repository:**
+### Deploy
 
-git clone <https://github.com/idvoretskyi/kubeflow-gke-setup.git> cd kubeflow-gke-setup
+```bash
+# 1. Clone and setup
+git clone https://github.com/idvoretskyi/kubeflow-gke-setup.git
+cd kubeflow-gke-setup
 
-2. **Configure your environment:**
+# 2. Set your GCP project
+gcloud config set project YOUR_PROJECT_ID
 
-- Update the `config.yaml` file with your desired settings, such as project ID, cluster name, and zone.
+# 3. Deploy everything
+./scripts/deploy.sh
+```
 
-1. **Run the installation script:**
+That's it! The script auto-detects your gcloud configuration and deploys everything.
 
-./install.sh
+## What You Get
 
-## Usage
+- **GKE cluster** with preemptible nodes (1-10 auto-scaling)
+- **Kubeflow 1.8.0** with Jupyter notebooks, pipelines, and model serving
+- **Cost estimation**: ~$50-150/month depending on usage
+- **Security**: Private nodes, workload identity, network policies
 
-Once the installation is complete, you can access the Kubeflow dashboard at `https://<your-kubeflow-endpoint>`.
+## Sample ML Pipeline
+
+```bash
+# Generate sample data
+cd examples/sample-ml-app
+python data_generator.py
+
+# Run ML pipeline
+python run_pipeline.py \
+    --kubeflow-endpoint http://YOUR_CLUSTER_IP \
+    --bucket-name your-gcs-bucket \
+    --data-file sample_datasets/classification_data.csv
+```
+
+## Management
+
+```bash
+# Check status
+./scripts/deploy.sh info
+
+# Destroy everything
+./scripts/deploy.sh destroy
+
+# Monitor cluster
+kubectl get pods -n kubeflow
+```
+
+## Troubleshooting
+
+**Authentication issues:**
+```bash
+gcloud auth login
+```
+
+**Check your config:**
+```bash
+./scripts/check-config.sh
+```
+
+**Common commands:**
+```bash
+kubectl get nodes                    # Check cluster
+kubectl get pods -n kubeflow        # Check Kubeflow
+kubectl logs POD_NAME -n kubeflow   # Check logs
+```
+
+## Architecture
+
+- **Terraform** for infrastructure as code
+- **GKE** with cost-optimized configuration
+- **Kubeflow** with Istio service mesh
+- **Auto-detection** of gcloud project/region
+
+## Cost Optimization
+
+- **Preemptible nodes**: Up to 80% cost savings
+- **Autoscaling**: 1-10 nodes based on demand
+- **Efficient resources**: e2-standard-4 instances
+- **Storage**: 100GB SSD per node
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request if you have any suggestions or improvements.
+1. Fork the repository
+2. Make your changes
+3. Test with `./scripts/deploy.sh`
+4. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+MIT License - see [LICENSE](LICENSE) file.

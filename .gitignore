@@ -1,0 +1,111 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+.terraform/
+.terraform.lock.hcl
+terraform.tfplan
+tfplan
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Security
+.secrets.baseline
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+
+# Kubeflow
+kubeconfig
+kustomization.yaml
+*.kubeconfig
+
+# Sample data
+examples/sample-ml-app/sample_datasets/
+examples/sample-ml-app/*.csv
+examples/sample-ml-app/*.json
+examples/sample-ml-app/*.yaml
+examples/sample-ml-app/*.yml
+
+# CI/CD artifacts
+*.sarif
+*-results.json
+*-report.*
+
+# Local development
+.env
+.env.local
+.env.*.local
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+
+# Docker
+Dockerfile.local
+docker-compose.override.yml
+
+# Kubernetes
+kubeflow_setup.yaml
+*.kubeconfig
+
+# Claude Code
+CLAUDE.md
+.claude/
+.claude_history
+claude_session/
+claude_context/
+*.claude
+.anthropic/

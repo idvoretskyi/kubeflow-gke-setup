@@ -1,0 +1,37 @@
+# Example Terraform variables file
+# Copy this file to terraform.tfvars and update with your values
+# 
+# NOTE: project_id and region will be auto-detected from your gcloud config
+# You only need to override them if you want to use different values
+
+# Optional overrides (will auto-detect from gcloud config if not provided)
+# project_id = "your-gcp-project-id"   # Auto-detected from: gcloud config get-value project
+# region = "us-central1"               # Auto-detected from: gcloud config get-value compute/region
+
+# Optional variables with defaults
+cluster_name = "kubeflow-cluster"
+# zones_override = ["us-central1-a", "us-central1-b", "us-central1-c"]  # Auto-generated from region if not provided
+
+# Cost-effective configuration
+machine_type = "e2-standard-4"  # Good balance of CPU/memory for ML workloads
+preemptible = true              # Use preemptible nodes for cost savings
+min_node_count = 1              # Minimum nodes (cost optimization)
+max_node_count = 10             # Maximum nodes (can scale up for demanding workloads)
+initial_node_count = 3          # Initial nodes
+
+# Storage configuration
+disk_size_gb = 100              # 100GB should be sufficient for most ML workloads
+
+# Optional domain for custom endpoint
+domain = ""                     # Leave empty for default LoadBalancer IP
+
+# OAuth scopes (default values work for most cases)
+oauth_scopes = [
+  "https://www.googleapis.com/auth/cloud-platform",
+  "https://www.googleapis.com/auth/devstorage.read_only",
+  "https://www.googleapis.com/auth/logging.write",
+  "https://www.googleapis.com/auth/monitoring",
+  "https://www.googleapis.com/auth/service.management.readonly",
+  "https://www.googleapis.com/auth/servicecontrol",
+  "https://www.googleapis.com/auth/trace.append"
+]
