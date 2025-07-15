@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  terraform-check:
+    name: Terraform Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.12.2'
+
+    - name: Terraform Format Check
+      run: |
+        cd terraform
+        terraform fmt -check -recursive
+
+    - name: Terraform Init & Validate
+      run: |
+        cd terraform
+        terraform init -backend=false
+        terraform validate
+
+    - name: Basic Security Check
+      run: |
+        cd terraform
+        # Check for hardcoded secrets
+        ! grep -r "password\|secret\|key" --include="*.tf" . || (echo "Found potential hardcoded secrets!" && exit 1)
+        echo "Basic security check passed ✓"
+
+  python-check:
+    name: Python Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        cd examples/sample-ml-app
+        pip install -r requirements.txt
+
+    - name: Python Syntax Check
+      run: |
+        cd examples/sample-ml-app
+        python -m py_compile pipeline.py
+        python -m py_compile data_generator.py
+        python -m py_compile run_pipeline.py
+        echo "Python syntax check passed ✓"
+
+  script-check:
+    name: Script Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Shell Script Check
+      run: |
+        bash -n scripts/deploy.sh
+        bash -n scripts/check-config.sh
+        echo "Shell script syntax check passed ✓"
+
+    - name: Check script permissions
+      run: |
+        [ -x scripts/deploy.sh ] || (echo "deploy.sh is not executable!" && exit 1)
+        [ -x scripts/check-config.sh ] || (echo "check-config.sh is not executable!" && exit 1)
+        echo "Script permissions check passed ✓"
+
+  basic-tests:
+    name: Basic Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Test Terraform Plan
+      run: |
+        cd terraform
+        
+        # Create test terraform.tfvars
+        cat > terraform.tfvars << 'EOF'
+        project_id = "test-project-123"
+        region = "us-central1"
+        cluster_name = "test-cluster"
+        EOF
+        
+        terraform init -backend=false
+        terraform plan -out=tfplan
+        echo "Terraform plan test passed ✓"
+
+    - name: Check required files
+      run: |
+        [ -f README.md ] || (echo "README.md is missing!" && exit 1)
+        [ -f terraform/terraform.tfvars.example ] || (echo "terraform.tfvars.example is missing!" && exit 1)
+        [ -f examples/sample-ml-app/README.md ] || (echo "Sample app README is missing!" && exit 1)
+        echo "Required files check passed ✓"

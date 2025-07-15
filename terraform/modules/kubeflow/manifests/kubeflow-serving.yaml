@@ -1,0 +1,130 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kfserving-controller
+  namespace: kubeflow
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kfserving-controller
+  namespace: kubeflow
+  labels:
+    app.kubernetes.io/name: kfserving-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kfserving-controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kfserving-controller
+    spec:
+      serviceAccountName: kfserving-controller
+      containers:
+      - name: manager
+        image: kfserving/kfserving-controller:v0.11.2
+        ports:
+        - containerPort: 8080
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: SECRET_NAME
+          value: "kfserving-webhook-server-secret"
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kfserving-controller
+  namespace: kubeflow
+  labels:
+    app.kubernetes.io/name: kfserving-controller
+spec:
+  selector:
+    app.kubernetes.io/name: kfserving-controller
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: models-web-app
+  namespace: kubeflow
+  labels:
+    app.kubernetes.io/name: models-web-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: models-web-app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: models-web-app
+    spec:
+      containers:
+      - name: models-web-app
+        image: kubeflownotebookswg/models-web-app:v1.8.0
+        ports:
+        - containerPort: 5000
+        env:
+        - name: USERID_HEADER
+          value: "kubeflow-userid"
+        - name: USERID_PREFIX
+          value: ""
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: models-web-app
+  namespace: kubeflow
+  labels:
+    app.kubernetes.io/name: models-web-app
+spec:
+  selector:
+    app.kubernetes.io/name: models-web-app
+  ports:
+  - port: 80
+    targetPort: 5000
+    protocol: TCP
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: models-web-app
+  namespace: kubeflow
+spec:
+  gateways:
+  - kubeflow-gateway
+  hosts:
+  - '*'
+  http:
+  - match:
+    - uri:
+        prefix: /models/
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: models-web-app.kubeflow.svc.cluster.local
+        port:
+          number: 80
