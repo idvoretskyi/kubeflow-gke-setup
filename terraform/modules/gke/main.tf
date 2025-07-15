@@ -116,10 +116,6 @@ resource "google_container_cluster" "primary" {
     network_policy_config {
       disabled = false
     }
-    istio_config {
-      disabled = false
-      auth     = "AUTH_MUTUAL_TLS"
-    }
   }
 }
 
