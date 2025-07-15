@@ -21,22 +21,23 @@ jobs:
         terraform_version: '1.12.2'
 
     - name: Terraform Format Check
-      run: |
-        cd terraform
-        terraform fmt -check -recursive
+      run: terraform fmt -check -recursive
+      working-directory: ./terraform
 
-    - name: Terraform Init & Validate
-      run: |
-        cd terraform
-        terraform init -backend=false
-        terraform validate
+    - name: Terraform Init (no backend)
+      run: terraform init -backend=false
+      working-directory: ./terraform
+
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: ./terraform
 
     - name: Basic Security Check
       run: |
-        cd terraform
         # Check for hardcoded secrets
         ! grep -r "password\|secret\|key" --include="*.tf" . || (echo "Found potential hardcoded secrets!" && exit 1)
         echo "Basic security check passed ✓"
+      working-directory: ./terraform
 
   python-check:
     name: Python Check
@@ -97,10 +98,8 @@ jobs:
       with:
         terraform_version: '1.12.2'
 
-    - name: Test Terraform Plan
+    - name: Test Terraform Plan (no refresh)
       run: |
-        cd terraform
-        
         # Create test terraform.tfvars
         cat > terraform.tfvars << 'EOF'
         project_id = "test-project-123"
@@ -109,8 +108,9 @@ jobs:
         EOF
         
         terraform init -backend=false
-        terraform plan -out=tfplan
+        terraform plan -refresh=false
         echo "Terraform plan test passed ✓"
+      working-directory: ./terraform
 
     - name: Check required files
       run: |
