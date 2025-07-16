@@ -1,4 +1,4 @@
-kfp==2.4.0
+kfp==2.13.0
 scikit-learn==1.5.0
 pandas==2.3.1
 numpy==1.25.2
