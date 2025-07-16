@@ -1,5 +1,9 @@
 name: Dependabot Auto-Merge
 
+permissions:
+  contents: read
+  pull-requests: write
+
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -22,12 +26,3 @@ jobs:
         gh pr review --approve "$PR_URL"
       env:
         PR_URL: ${{ github.event.pull_request.html_url }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Auto-merge after CI passes
-      if: steps.metadata.outputs.update-type == 'version-update:semver-minor' || steps.metadata.outputs.update-type == 'version-update:semver-patch'
-      run: |
-        gh pr merge --auto --merge "$PR_URL"
-      env:
-        PR_URL: ${{ github.event.pull_request.html_url }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
