@@ -1,0 +1,19 @@
+repository:
+  name: kubeflow-gke-setup
+  description: "Kubeflow on GKE setup and automation. Contains Terraform, scripts, and ML sample app."
+  private: false
+
+branches:
+  - name: main
+    protection:
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+      enforce_admins: true
+      restrictions:
+        users: []
+        teams: []
+      required_status_checks:
+        strict: true
+        contexts: []
+      allow_force_pushes: false
+      allow_deletions: false
