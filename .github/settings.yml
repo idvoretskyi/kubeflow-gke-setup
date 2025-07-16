@@ -2,6 +2,7 @@ repository:
   name: kubeflow-gke-setup
   description: "Kubeflow on GKE setup and automation. Contains Terraform, scripts, and ML sample app."
   private: false
+  delete_branch_on_merge: true
 
 branches:
   - name: main
