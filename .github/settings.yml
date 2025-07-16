@@ -4,6 +4,14 @@ repository:
   private: false
   delete_branch_on_merge: true
 
+security:
+  codeql:
+    languages:
+      - python
+      - javascript
+    queries:
+      - security-and-quality
+
 branches:
   - name: main
     protection:
