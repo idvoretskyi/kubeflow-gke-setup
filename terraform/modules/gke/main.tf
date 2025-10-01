@@ -1,7 +1,7 @@
 resource "google_container_cluster" "primary" {
-  name               = var.cluster_name
-  location           = var.region
-  node_locations     = var.zones
+  name                = var.cluster_name
+  location            = var.region
+  node_locations      = var.zones
   deletion_protection = false
 
   # We can't create a cluster with no node pool defined, but we want to only use
@@ -159,8 +159,8 @@ resource "google_container_node_pool" "primary_nodes" {
 
     # Labels for cost tracking
     labels = {
-      env        = "kubeflow"
-      team       = "ml-platform"
+      env         = "kubeflow"
+      team        = "ml-platform"
       cost-center = "research"
     }
 
@@ -200,7 +200,7 @@ resource "google_project_iam_member" "gke_node_sa_bindings" {
     "roles/stackdriver.resourceMetadata.writer",
     "roles/storage.objectViewer"
   ])
-  
+
   project = var.project_id
   role    = each.value
   member  = "serviceAccount:${google_service_account.gke_node_sa.email}"

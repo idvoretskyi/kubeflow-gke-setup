@@ -1,5 +1,5 @@
 locals {
-  kubeflow_version = "1.8.0"
+  kubeflow_version  = "1.8.0"
   kustomize_version = "5.0.1"
 }
 
@@ -8,7 +8,7 @@ resource "kubernetes_namespace" "kubeflow" {
   metadata {
     name = "kubeflow"
     labels = {
-      "app.kubernetes.io/name" = "kubeflow"
+      "app.kubernetes.io/name"    = "kubeflow"
       "app.kubernetes.io/version" = local.kubeflow_version
     }
   }
@@ -77,9 +77,9 @@ resource "helm_release" "istiod" {
 # Install Kubeflow using manifest files
 resource "kubernetes_manifest" "kubeflow_manifests" {
   count = length(local.kubeflow_manifests)
-  
+
   manifest = yamldecode(local.kubeflow_manifests[count.index])
-  
+
   depends_on = [
     kubernetes_namespace.kubeflow,
     helm_release.cert_manager,
@@ -127,7 +127,7 @@ resource "google_project_iam_member" "kubeflow_sa_bindings" {
     "roles/monitoring.metricWriter",
     "roles/logging.logWriter"
   ])
-  
+
   project = var.project_id
   role    = each.value
   member  = "serviceAccount:${google_service_account.kubeflow_gcp_sa.email}"
@@ -137,7 +137,7 @@ resource "google_project_iam_member" "kubeflow_sa_bindings" {
 resource "google_service_account_iam_binding" "kubeflow_workload_identity" {
   service_account_id = google_service_account.kubeflow_gcp_sa.name
   role               = "roles/iam.workloadIdentityUser"
-  
+
   members = [
     "serviceAccount:${var.project_id}.svc.id.goog[${kubernetes_namespace.kubeflow.metadata[0].name}/${kubernetes_service_account.kubeflow_sa.metadata[0].name}]"
   ]
@@ -155,7 +155,7 @@ resource "kubernetes_service" "kubeflow_dashboard" {
 
   spec {
     type = "LoadBalancer"
-    
+
     selector = {
       "app.kubernetes.io/name" = "centraldashboard"
     }
