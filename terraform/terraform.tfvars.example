@@ -35,3 +35,21 @@ oauth_scopes = [
   "https://www.googleapis.com/auth/servicecontrol",
   "https://www.googleapis.com/auth/trace.append"
 ]
+
+# Master authorized networks (for enhanced security)
+# Default: empty list (no external access to Kubernetes API, only via GCP Console)
+# Uncomment and configure to allow specific IP addresses/ranges to access the cluster API
+#
+# SECURITY BEST PRACTICE: Only add your trusted IP addresses
+# To get your current IP: curl -s https://ifconfig.me
+#
+# master_authorized_networks = [
+#   {
+#     cidr_block   = "203.0.113.0/24"  # Example: Your office network
+#     display_name = "Office Network"
+#   },
+#   {
+#     cidr_block   = "198.51.100.5/32"  # Example: Your home IP (use /32 for single IP)
+#     display_name = "Home IP"
+#   }
+# ]

@@ -76,7 +76,7 @@ spec:
     spec:
       containers:
       - name: models-web-app
-        image: kubeflownotebookswg/models-web-app:v1.8.0
+        image: kubeflownotebookswg/models-web-app:v1.10.0
         ports:
         - containerPort: 5000
         env:

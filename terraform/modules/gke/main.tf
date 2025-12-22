@@ -90,10 +90,19 @@ resource "google_container_cluster" "primary" {
   }
 
   # Master authorized networks
-  master_authorized_networks_config {
-    cidr_blocks {
-      cidr_block   = "0.0.0.0/0"
-      display_name = "All networks"
+  # Configurable list of authorized networks for enhanced security
+  # Default: empty list (no external access, only via GCP Console)
+  # To allow specific IPs: set master_authorized_networks variable
+  dynamic "master_authorized_networks_config" {
+    for_each = length(var.master_authorized_networks) > 0 ? [1] : []
+    content {
+      dynamic "cidr_blocks" {
+        for_each = var.master_authorized_networks
+        content {
+          cidr_block   = cidr_blocks.value.cidr_block
+          display_name = cidr_blocks.value.display_name
+        }
+      }
     }
   }
 

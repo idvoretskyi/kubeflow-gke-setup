@@ -1,5 +1,5 @@
 locals {
-  kubeflow_version  = "1.8.0"
+  kubeflow_version  = "1.10.0"
   kustomize_version = "5.0.1"
 }
 
@@ -40,15 +40,16 @@ resource "helm_release" "cert_manager" {
   version    = "v1.13.2"
   namespace  = kubernetes_namespace.cert_manager.metadata[0].name
 
-  set {
-    name  = "installCRDs"
-    value = "true"
-  }
-
-  set {
-    name  = "global.leaderElection.namespace"
-    value = kubernetes_namespace.cert_manager.metadata[0].name
-  }
+  set = [
+    {
+      name  = "installCRDs"
+      value = "true"
+    },
+    {
+      name  = "global.leaderElection.namespace"
+      value = kubernetes_namespace.cert_manager.metadata[0].name
+    }
+  ]
 
   depends_on = [kubernetes_namespace.cert_manager]
 }
@@ -118,14 +119,15 @@ resource "google_service_account" "kubeflow_gcp_sa" {
 }
 
 # IAM bindings for Kubeflow service account
+# Following principle of least privilege with granular permissions
 resource "google_project_iam_member" "kubeflow_sa_bindings" {
   for_each = toset([
-    "roles/storage.admin",
-    "roles/bigquery.admin",
-    "roles/ml.admin",
-    "roles/cloudsql.client",
-    "roles/monitoring.metricWriter",
-    "roles/logging.logWriter"
+    "roles/storage.objectAdmin",     # Changed from storage.admin - sufficient for object operations
+    "roles/bigquery.dataEditor",     # Changed from bigquery.admin - sufficient for data operations
+    "roles/aiplatform.user",         # Changed from ml.admin - sufficient for AI Platform usage
+    "roles/cloudsql.client",         # Unchanged - appropriate for Cloud SQL access
+    "roles/monitoring.metricWriter", # Unchanged - appropriate for metrics
+    "roles/logging.logWriter"        # Unchanged - appropriate for logs
   ])
 
   project = var.project_id
@@ -198,8 +200,9 @@ resource "google_storage_bucket" "kubeflow_artifacts" {
 }
 
 # Grant storage access to Kubeflow service account
+# Using objectAdmin instead of admin - sufficient for artifact storage operations
 resource "google_storage_bucket_iam_member" "kubeflow_storage_access" {
   bucket = google_storage_bucket.kubeflow_artifacts.name
-  role   = "roles/storage.admin"
+  role   = "roles/storage.objectAdmin"
   member = "serviceAccount:${google_service_account.kubeflow_gcp_sa.email}"
 }

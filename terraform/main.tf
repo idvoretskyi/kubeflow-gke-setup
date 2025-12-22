@@ -28,7 +28,7 @@ provider "kubernetes" {
 }
 
 provider "helm" {
-  kubernetes {
+  kubernetes = {
     host                   = "https://${module.gke.endpoint}"
     token                  = data.google_client_config.default.access_token
     cluster_ca_certificate = base64decode(module.gke.ca_certificate)
@@ -39,6 +39,9 @@ data "google_client_config" "default" {}
 
 module "gke" {
   source = "./modules/gke"
+
+  # Wait for required APIs to be enabled
+  depends_on = [google_project_service.required_apis]
 
   project_id   = local.project_id
   cluster_name = var.cluster_name
