@@ -16,7 +16,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Setup Python
       uses: actions/setup-python@v6
@@ -36,33 +36,39 @@ jobs:
         python -m py_compile run_pipeline.py
         echo "Python syntax check passed ✓"
 
-  script-check:
-    name: Script Check
+  terraform-check:
+    name: Terraform Check
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
-    - name: Shell Script Check
-      run: |
-        bash -n scripts/deploy.sh
-        bash -n scripts/check-config.sh
-        echo "Shell script syntax check passed ✓"
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.12.2"
 
-    - name: Check script permissions
+    - name: Terraform Format Check
       run: |
-        [ -x scripts/deploy.sh ] || (echo "deploy.sh is not executable!" && exit 1)
-        [ -x scripts/check-config.sh ] || (echo "check-config.sh is not executable!" && exit 1)
-        echo "Script permissions check passed ✓"
+        cd terraform
+        terraform fmt -check -recursive
+        echo "Terraform format check passed ✓"
+
+    - name: Terraform Init and Validate
+      run: |
+        cd terraform
+        terraform init -backend=false
+        terraform validate
+        echo "Terraform validation passed ✓"
 
   basic-tests:
     name: Basic Tests
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Test basic functionality
       run: |
@@ -73,4 +79,5 @@ jobs:
         [ -f README.md ] || (echo "README.md is missing!" && exit 1)
         [ -f terraform/terraform.tfvars.example ] || (echo "terraform.tfvars.example is missing!" && exit 1)
         [ -f examples/sample-ml-app/README.md ] || (echo "Sample app README is missing!" && exit 1)
+        [ -f terraform/services.tf ] || (echo "services.tf is missing!" && exit 1)
         echo "Required files check passed ✓"

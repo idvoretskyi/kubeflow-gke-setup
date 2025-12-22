@@ -2,11 +2,9 @@
 Script to run the sample ML pipeline on Kubeflow
 """
 
-import kfp
 from kfp.client import Client
 import argparse
 import os
-import yaml
 from google.cloud import storage
 
 def upload_data_to_gcs(bucket_name, local_file, gcs_path):

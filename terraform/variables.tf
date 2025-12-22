@@ -1,7 +1,7 @@
 variable "project_id" {
   description = "GCP project ID (will auto-detect from gcloud config if not provided)"
   type        = string
-  default     = ""
+  default     = "placeholder-project-id"
 }
 
 variable "cluster_name" {
