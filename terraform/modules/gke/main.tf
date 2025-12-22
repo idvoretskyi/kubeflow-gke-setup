@@ -1,7 +1,7 @@
 resource "google_container_cluster" "primary" {
-  name               = var.cluster_name
-  location           = var.region
-  node_locations     = var.zones
+  name                = var.cluster_name
+  location            = var.region
+  node_locations      = var.zones
   deletion_protection = false
 
   # We can't create a cluster with no node pool defined, but we want to only use
@@ -90,10 +90,19 @@ resource "google_container_cluster" "primary" {
   }
 
   # Master authorized networks
-  master_authorized_networks_config {
-    cidr_blocks {
-      cidr_block   = "0.0.0.0/0"
-      display_name = "All networks"
+  # Configurable list of authorized networks for enhanced security
+  # Default: empty list (no external access, only via GCP Console)
+  # To allow specific IPs: set master_authorized_networks variable
+  dynamic "master_authorized_networks_config" {
+    for_each = length(var.master_authorized_networks) > 0 ? [1] : []
+    content {
+      dynamic "cidr_blocks" {
+        for_each = var.master_authorized_networks
+        content {
+          cidr_block   = cidr_blocks.value.cidr_block
+          display_name = cidr_blocks.value.display_name
+        }
+      }
     }
   }
 
@@ -159,8 +168,8 @@ resource "google_container_node_pool" "primary_nodes" {
 
     # Labels for cost tracking
     labels = {
-      env        = "kubeflow"
-      team       = "ml-platform"
+      env         = "kubeflow"
+      team        = "ml-platform"
       cost-center = "research"
     }
 
@@ -200,7 +209,7 @@ resource "google_project_iam_member" "gke_node_sa_bindings" {
     "roles/stackdriver.resourceMetadata.writer",
     "roles/storage.objectViewer"
   ])
-  
+
   project = var.project_id
   role    = each.value
   member  = "serviceAccount:${google_service_account.gke_node_sa.email}"
