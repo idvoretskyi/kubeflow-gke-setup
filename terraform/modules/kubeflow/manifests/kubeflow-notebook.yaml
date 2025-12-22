@@ -24,7 +24,7 @@ spec:
       serviceAccountName: notebook-controller
       containers:
       - name: manager
-        image: kubeflownotebookswg/notebook-controller:v1.8.0
+        image: kubeflownotebookswg/notebook-controller:v1.10.0
         ports:
         - containerPort: 8443
         env:
@@ -74,7 +74,7 @@ spec:
     spec:
       containers:
       - name: jupyter-web-app
-        image: kubeflownotebookswg/jupyter-web-app:v1.8.0
+        image: kubeflownotebookswg/jupyter-web-app:v1.10.0
         ports:
         - containerPort: 5000
         env:

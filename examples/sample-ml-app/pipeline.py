@@ -12,10 +12,10 @@ from typing import NamedTuple
 @component(
     base_image="python:3.9",
     packages_to_install=[
-        "pandas==2.1.3",
-        "scikit-learn==1.3.2",
-        "numpy==1.25.2",
-        "google-cloud-storage==2.10.0"
+        "pandas==2.3.2",
+        "scikit-learn==1.6.1",
+        "numpy==2.0.2",
+        "google-cloud-storage==3.3.1"
     ]
 )
 def preprocess_data(
@@ -81,11 +81,11 @@ def preprocess_data(
 @component(
     base_image="python:3.9",
     packages_to_install=[
-        "scikit-learn==1.3.2",
-        "pandas==2.1.3",
-        "numpy==1.25.2",
-        "joblib==1.3.2",
-        "google-cloud-storage==2.10.0"
+        "scikit-learn==1.6.1",
+        "pandas==2.3.2",
+        "numpy==2.0.2",
+        "joblib==1.5.2",
+        "google-cloud-storage==3.3.1"
     ]
 )
 def train_model(
@@ -172,9 +172,9 @@ def train_model(
 @component(
     base_image="python:3.9",
     packages_to_install=[
-        "scikit-learn==1.3.2",
-        "numpy==1.25.2",
-        "joblib==1.3.2"
+        "scikit-learn==1.6.1",
+        "numpy==2.0.2",
+        "joblib==1.5.2"
     ]
 )
 def validate_model(
@@ -208,8 +208,8 @@ def validate_model(
 @component(
     base_image="python:3.9",
     packages_to_install=[
-        "google-cloud-storage==2.10.0",
-        "requests==2.31.0"
+        "google-cloud-storage==3.3.1",
+        "requests==2.32.5"
     ]
 )
 def prepare_deployment(

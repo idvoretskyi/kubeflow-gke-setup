@@ -52,3 +52,20 @@ variable "oauth_scopes" {
   description = "OAuth scopes for GKE nodes"
   type        = list(string)
 }
+
+variable "master_authorized_networks" {
+  description = "List of CIDR blocks authorized to access the Kubernetes master. Leave empty to disable external access to the master endpoint."
+  type = list(object({
+    cidr_block   = string
+    display_name = string
+  }))
+  default = []
+
+  validation {
+    condition = alltrue([
+      for network in var.master_authorized_networks :
+      can(cidrhost(network.cidr_block, 0))
+    ])
+    error_message = "All cidr_block values must be valid CIDR notation (e.g., '203.0.113.0/24')."
+  }
+}
