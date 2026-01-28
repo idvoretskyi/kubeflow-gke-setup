@@ -1,11 +1,11 @@
 output "endpoint" {
   description = "Kubeflow dashboard endpoint"
-  value       = "http://${kubernetes_service.kubeflow_dashboard.status[0].load_balancer[0].ingress[0].ip}"
+  value       = "http://${kubernetes_service_v1.kubeflow_dashboard.status[0].load_balancer[0].ingress[0].ip}"
 }
 
 output "kubeflow_namespace" {
   description = "Kubeflow namespace"
-  value       = kubernetes_namespace.kubeflow.metadata[0].name
+  value       = kubernetes_namespace_v1.kubeflow.metadata[0].name
 }
 
 output "service_account_email" {

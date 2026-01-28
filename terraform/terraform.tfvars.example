@@ -1,6 +1,6 @@
 # Example Terraform variables file
 # Copy this file to terraform.tfvars and update with your values
-# 
+#
 # NOTE: project_id and region will be auto-detected from your gcloud config
 # You only need to override them if you want to use different values
 
@@ -12,9 +12,33 @@
 cluster_name = "kubeflow-cluster"
 # zones_override = ["us-central1-a", "us-central1-b", "us-central1-c"]  # Auto-generated from region if not provided
 
-# Cost-effective configuration
+# =============================================================================
+# GKE VERSION AND RELEASE CHANNEL
+# =============================================================================
+# Choose your release channel based on your needs:
+#   - RAPID:   Latest Kubernetes (1.35) - Best for learning/demos, newest features
+#   - REGULAR: Balanced (1.33) - Good stability with recent features
+#   - STABLE:  Production-ready (1.33) - Most stable, fewer updates
+release_channel = "RAPID"  # Recommended for learning - get the latest K8s features!
+
+# =============================================================================
+# LEARNING MODE CONFIGURATION
+# =============================================================================
+# Enable learning mode for easier experimentation:
+#   - Removes node taints so pods can schedule without tolerations
+#   - Simplifies networking for beginners
+#   - Best for demos, tutorials, and learning Kubeflow
+learning_mode = true
+
+# Private nodes setting (set to false for easier local debugging)
+enable_private_nodes = true
+
+# =============================================================================
+# COST-EFFECTIVE CONFIGURATION
+# =============================================================================
 machine_type = "e2-standard-4"  # Good balance of CPU/memory for ML workloads
-preemptible = true              # Use preemptible nodes for cost savings
+spot_instances = true           # Use Spot VMs for 60-91% cost savings (recommended)
+preemptible = false             # Legacy option, use spot_instances instead
 min_node_count = 1              # Minimum nodes (cost optimization)
 max_node_count = 10             # Maximum nodes (can scale up for demanding workloads)
 initial_node_count = 3          # Initial nodes

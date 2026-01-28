@@ -7,7 +7,7 @@ terraform {
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 3.0"
+      version = "~> 3.0" # v3.0+ fixes compatibility with Terraform >= 1.12.1
     }
     helm = {
       source  = "hashicorp/helm"
@@ -51,6 +51,7 @@ module "gke" {
   # Cost-effective configuration
   machine_type       = var.machine_type
   preemptible        = var.preemptible
+  spot_instances     = var.spot_instances
   min_node_count     = var.min_node_count
   max_node_count     = var.max_node_count
   initial_node_count = var.initial_node_count
@@ -58,6 +59,11 @@ module "gke" {
   # Kubeflow-specific requirements
   disk_size_gb = var.disk_size_gb
   oauth_scopes = var.oauth_scopes
+
+  # GKE version and learning mode
+  release_channel      = var.release_channel
+  learning_mode        = var.learning_mode
+  enable_private_nodes = var.enable_private_nodes
 }
 
 module "kubeflow" {

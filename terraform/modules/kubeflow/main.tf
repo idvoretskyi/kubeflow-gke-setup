@@ -4,7 +4,7 @@ locals {
 }
 
 # Create namespace for Kubeflow
-resource "kubernetes_namespace" "kubeflow" {
+resource "kubernetes_namespace_v1" "kubeflow" {
   metadata {
     name = "kubeflow"
     labels = {
@@ -14,7 +14,7 @@ resource "kubernetes_namespace" "kubeflow" {
   }
 }
 
-resource "kubernetes_namespace" "istio_system" {
+resource "kubernetes_namespace_v1" "istio_system" {
   metadata {
     name = "istio-system"
     labels = {
@@ -23,7 +23,7 @@ resource "kubernetes_namespace" "istio_system" {
   }
 }
 
-resource "kubernetes_namespace" "cert_manager" {
+resource "kubernetes_namespace_v1" "cert_manager" {
   metadata {
     name = "cert-manager"
     labels = {
@@ -38,7 +38,7 @@ resource "helm_release" "cert_manager" {
   repository = "https://charts.jetstack.io"
   chart      = "cert-manager"
   version    = "v1.13.2"
-  namespace  = kubernetes_namespace.cert_manager.metadata[0].name
+  namespace  = kubernetes_namespace_v1.cert_manager.metadata[0].name
 
   set = [
     {
@@ -47,11 +47,11 @@ resource "helm_release" "cert_manager" {
     },
     {
       name  = "global.leaderElection.namespace"
-      value = kubernetes_namespace.cert_manager.metadata[0].name
+      value = kubernetes_namespace_v1.cert_manager.metadata[0].name
     }
   ]
 
-  depends_on = [kubernetes_namespace.cert_manager]
+  depends_on = [kubernetes_namespace_v1.cert_manager]
 }
 
 # Install Istio using Helm
@@ -60,9 +60,9 @@ resource "helm_release" "istio_base" {
   repository = "https://istio-release.storage.googleapis.com/charts"
   chart      = "base"
   version    = "1.19.3"
-  namespace  = kubernetes_namespace.istio_system.metadata[0].name
+  namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
 
-  depends_on = [kubernetes_namespace.istio_system]
+  depends_on = [kubernetes_namespace_v1.istio_system]
 }
 
 resource "helm_release" "istiod" {
@@ -70,7 +70,7 @@ resource "helm_release" "istiod" {
   repository = "https://istio-release.storage.googleapis.com/charts"
   chart      = "istiod"
   version    = "1.19.3"
-  namespace  = kubernetes_namespace.istio_system.metadata[0].name
+  namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
 
   depends_on = [helm_release.istio_base]
 }
@@ -82,7 +82,7 @@ resource "kubernetes_manifest" "kubeflow_manifests" {
   manifest = yamldecode(local.kubeflow_manifests[count.index])
 
   depends_on = [
-    kubernetes_namespace.kubeflow,
+    kubernetes_namespace_v1.kubeflow,
     helm_release.cert_manager,
     helm_release.istiod
   ]
@@ -101,10 +101,10 @@ locals {
 }
 
 # Create a service account for Kubeflow
-resource "kubernetes_service_account" "kubeflow_sa" {
+resource "kubernetes_service_account_v1" "kubeflow_sa" {
   metadata {
     name      = "kubeflow-service-account"
-    namespace = kubernetes_namespace.kubeflow.metadata[0].name
+    namespace = kubernetes_namespace_v1.kubeflow.metadata[0].name
     annotations = {
       "iam.gke.io/gcp-service-account" = google_service_account.kubeflow_gcp_sa.email
     }
@@ -141,15 +141,15 @@ resource "google_service_account_iam_binding" "kubeflow_workload_identity" {
   role               = "roles/iam.workloadIdentityUser"
 
   members = [
-    "serviceAccount:${var.project_id}.svc.id.goog[${kubernetes_namespace.kubeflow.metadata[0].name}/${kubernetes_service_account.kubeflow_sa.metadata[0].name}]"
+    "serviceAccount:${var.project_id}.svc.id.goog[${kubernetes_namespace_v1.kubeflow.metadata[0].name}/${kubernetes_service_account_v1.kubeflow_sa.metadata[0].name}]"
   ]
 }
 
 # Create LoadBalancer service for Kubeflow Central Dashboard
-resource "kubernetes_service" "kubeflow_dashboard" {
+resource "kubernetes_service_v1" "kubeflow_dashboard" {
   metadata {
     name      = "kubeflow-dashboard-lb"
-    namespace = kubernetes_namespace.kubeflow.metadata[0].name
+    namespace = kubernetes_namespace_v1.kubeflow.metadata[0].name
     labels = {
       "app.kubernetes.io/name" = "kubeflow-dashboard"
     }

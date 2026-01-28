@@ -82,11 +82,12 @@ resource "google_container_cluster" "primary" {
   network    = "default"
   subnetwork = "default"
 
-  # Enable private nodes for security
+  # Private cluster configuration
+  # For learning mode, private nodes can be disabled for easier access
   private_cluster_config {
-    enable_private_nodes    = true
+    enable_private_nodes    = var.enable_private_nodes
     enable_private_endpoint = false
-    master_ipv4_cidr_block  = "10.0.0.0/28"
+    master_ipv4_cidr_block  = var.enable_private_nodes ? "10.0.0.0/28" : null
   }
 
   # Master authorized networks
@@ -107,8 +108,9 @@ resource "google_container_cluster" "primary" {
   }
 
   # Release channel for automatic updates
+  # RAPID = Latest K8s (1.35), REGULAR = Balanced (1.33), STABLE = Production (1.33)
   release_channel {
-    channel = "REGULAR"
+    channel = var.release_channel
   }
 
   # Enable shielded nodes
@@ -148,7 +150,9 @@ resource "google_container_node_pool" "primary_nodes" {
   }
 
   node_config {
-    preemptible     = var.preemptible
+    # Use Spot VMs (recommended) or preemptible for cost savings (60-91% discount)
+    spot            = var.spot_instances
+    preemptible     = var.spot_instances ? false : var.preemptible
     machine_type    = var.machine_type
     disk_size_gb    = var.disk_size_gb
     disk_type       = "pd-ssd"
@@ -166,18 +170,22 @@ resource "google_container_node_pool" "primary_nodes" {
       enable_integrity_monitoring = true
     }
 
-    # Labels for cost tracking
+    # Labels for cost tracking and learning mode identification
     labels = {
-      env         = "kubeflow"
-      team        = "ml-platform"
-      cost-center = "research"
+      env           = "kubeflow"
+      team          = "ml-platform"
+      cost-center   = "research"
+      learning-mode = var.learning_mode ? "enabled" : "disabled"
     }
 
-    # Taints for Kubeflow workloads
-    taint {
-      key    = "kubeflow"
-      value  = "true"
-      effect = "NO_SCHEDULE"
+    # Taints for Kubeflow workloads - disabled in learning mode for easier experimentation
+    dynamic "taint" {
+      for_each = var.learning_mode ? [] : [1]
+      content {
+        key    = "kubeflow"
+        value  = "true"
+        effect = "NO_SCHEDULE"
+      }
     }
 
     # Metadata

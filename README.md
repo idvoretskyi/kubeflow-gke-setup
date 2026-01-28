@@ -1,16 +1,25 @@
 # Kubeflow on GKE Setup
 
-Automated deployment of Kubeflow 1.10.0 on Google Kubernetes Engine using Terraform with security hardening and cost optimization.
+Automated deployment of Kubeflow 1.10.0 on Google Kubernetes Engine using Terraform - perfect for **learning, demos, and experimentation** with cost optimization and security hardening.
 
 ## Overview
 
-This repository provides production-ready infrastructure-as-code for deploying Kubeflow on GKE with:
+This repository provides a **learning-friendly** infrastructure-as-code deployment for Kubeflow on GKE with:
 
-- **Automated deployment** via single command with gcloud configuration auto-detection
-- **Cost optimization** using preemptible nodes with autoscaling (1-10 nodes)
-- **Security hardening** including private nodes, least-privilege IAM, and configurable network access
+- **Latest Kubernetes** via GKE RAPID channel (currently K8s 1.35)
+- **Learning mode** that simplifies pod scheduling and networking for beginners
+- **Cost optimization** using Spot VMs with autoscaling (60-91% savings)
+- **Automated deployment** with gcloud configuration auto-detection
 - **ML pipeline examples** demonstrating end-to-end workflows
-- **CI/CD validation** with automated Terraform, Python, and shell script testing
+- **Security hardening** for production readiness when needed
+
+### Release Channels
+
+| Channel | K8s Version | Best For |
+|---------|-------------|----------|
+| **RAPID** (default) | 1.35 | Learning, demos, testing latest features |
+| REGULAR | 1.33 | Balanced stability and features |
+| STABLE | 1.33 | Production workloads |
 
 ## Quick Start
 
@@ -39,8 +48,9 @@ Terraform auto-detects gcloud configuration and provisions all infrastructure.
 
 ## Infrastructure Components
 
-**Compute**:
-- GKE cluster with preemptible nodes (e2-standard-4)
+**Kubernetes**:
+- GKE cluster with **RAPID release channel** (Kubernetes 1.35)
+- Spot VMs for cost savings (e2-standard-4)
 - Autoscaling: 1-10 nodes based on demand
 - 100GB SSD per node
 
@@ -49,14 +59,19 @@ Terraform auto-detects gcloud configuration and provisions all infrastructure.
 - Istio 1.19.3 service mesh
 - cert-manager 1.13.2
 
-**Security**:
-- Private cluster (no public master endpoint by default)
+**Learning Mode Features**:
+- Node taints disabled for easy pod scheduling
+- Simplified networking for beginners
+- Quick start commands in Terraform output
+
+**Security** (can be configured for production):
+- Private cluster (configurable)
 - Workload Identity for pod-to-GCP authentication
 - Least-privilege IAM service accounts
 - Network policies and binary authorization
 - Shielded nodes with Secure Boot
 
-**Estimated Cost**: $50-150/month depending on workload
+**Estimated Cost**: $30-100/month with Spot VMs (60-91% savings vs on-demand)
 
 ## Usage
 
@@ -90,6 +105,39 @@ kubectl get pods -n kubeflow
 ```
 
 ## Configuration
+
+### Learning Mode vs Production Mode
+
+This project defaults to **learning mode** for easier experimentation:
+
+```hcl
+# terraform/terraform.tfvars
+
+# Learning mode (default) - easier for demos and learning
+learning_mode = true           # No node taints, pods schedule freely
+release_channel = "RAPID"      # Latest Kubernetes (1.35)
+spot_instances = true          # Cost savings
+
+# Production mode - stricter security
+learning_mode = false          # Node taints enabled
+release_channel = "STABLE"     # Production-ready Kubernetes
+spot_instances = false         # On-demand VMs for reliability
+```
+
+### Release Channel Selection
+
+Choose the GKE release channel based on your needs:
+
+```hcl
+# Latest features for learning (Kubernetes 1.35)
+release_channel = "RAPID"
+
+# Balanced for most use cases (Kubernetes 1.33)
+release_channel = "REGULAR"
+
+# Production stability (Kubernetes 1.33)
+release_channel = "STABLE"
+```
 
 ### Master Authorized Networks
 
@@ -137,10 +185,15 @@ Without configured authorized networks, cluster access is limited to GCP Console
 - Network policies and binary authorization enabled
 
 **Cost Controls**:
-- Preemptible nodes (80% cost reduction vs standard nodes)
+- Spot VMs (60-91% cost reduction vs on-demand)
 - Node autoscaling (1-10 based on workload)
 - Automatic storage lifecycle (30-day retention)
 - Resource usage export to BigQuery for analysis
+
+**Learning Mode**:
+- Configurable node taints (disabled by default in learning mode)
+- RAPID release channel for latest Kubernetes features
+- Helpful output commands for quick start
 
 ## Troubleshooting
 
@@ -181,6 +234,14 @@ python -m py_compile *.py             # Python syntax
 - Python syntax verification
 
 ## Recent Changes
+
+**Learning Platform Enhancement** (January 2025):
+- Added **RAPID release channel** support for latest Kubernetes (1.35)
+- Introduced **learning mode** that disables node taints for easier experimentation
+- Replaced preemptible with **Spot VMs** (newer API, same cost savings)
+- Added configurable release channel (RAPID/REGULAR/STABLE)
+- Enhanced outputs with quick start commands and version information
+- Updated documentation for learning/demo use cases
 
 **Security** (December 2024):
 - Reduced IAM permissions to least-privilege roles

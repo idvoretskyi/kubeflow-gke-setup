@@ -69,3 +69,31 @@ variable "master_authorized_networks" {
     error_message = "All cidr_block values must be valid CIDR notation (e.g., '203.0.113.0/24')."
   }
 }
+
+# =============================================================================
+# GKE Version and Learning Mode Configuration
+# =============================================================================
+
+variable "release_channel" {
+  description = "GKE release channel: RAPID (latest K8s 1.35), REGULAR (1.33), STABLE (1.33)"
+  type        = string
+  default     = "RAPID"
+}
+
+variable "learning_mode" {
+  description = "Enable learning mode - removes node taints for easier pod scheduling"
+  type        = bool
+  default     = true
+}
+
+variable "enable_private_nodes" {
+  description = "Enable private nodes (no public IPs on nodes)"
+  type        = bool
+  default     = true
+}
+
+variable "spot_instances" {
+  description = "Use Spot VMs instead of preemptible (newer API, same discount)"
+  type        = bool
+  default     = true
+}
