@@ -1,7 +1,7 @@
 resource "google_container_cluster" "primary" {
   name                = var.cluster_name
   location            = var.region
-  node_locations      = var.zones
+  node_locations      = length(var.zones) > 0 ? var.zones : null
   deletion_protection = false
 
   # We can't create a cluster with no node pool defined, but we want to only use
@@ -10,10 +10,11 @@ resource "google_container_cluster" "primary" {
   remove_default_node_pool = true
   initial_node_count       = 1
 
-  # Enable network policy
-  network_policy {
-    enabled = true
-  }
+  # Network policy - disabled for learning mode (can cause conflicts with Dataplane V2)
+  # Enable manually for production use with proper Dataplane configuration
+  # network_policy {
+  #   enabled = true
+  # }
 
   # Enable IP alias for VPC-native networking
   ip_allocation_policy {}
@@ -23,19 +24,21 @@ resource "google_container_cluster" "primary" {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
 
-  # Enable binary authorization
-  binary_authorization {
-    evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
-  }
+  # Binary authorization disabled for learning mode
+  # Uncomment for production use (requires Binary Authorization API)
+  # binary_authorization {
+  #   evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
+  # }
 
-  # Enable resource usage export
-  resource_usage_export_config {
-    enable_network_egress_metering       = true
-    enable_resource_consumption_metering = true
-    bigquery_destination {
-      dataset_id = google_bigquery_dataset.gke_usage.dataset_id
-    }
-  }
+  # Resource usage export disabled for learning mode
+  # Uncomment for production cost tracking
+  # resource_usage_export_config {
+  #   enable_network_egress_metering       = true
+  #   enable_resource_consumption_metering = true
+  #   bigquery_destination {
+  #     dataset_id = google_bigquery_dataset.gke_usage.dataset_id
+  #   }
+  # }
 
   # Enable maintenance policy
   maintenance_policy {
@@ -44,39 +47,38 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  # Enable cluster autoscaling
-  cluster_autoscaling {
-    enabled = true
-    auto_provisioning_defaults {
-      min_cpu_platform = "Intel Haswell"
-      oauth_scopes     = var.oauth_scopes
-      service_account  = google_service_account.gke_node_sa.email
-    }
-    resource_limits {
-      resource_type = "cpu"
-      minimum       = 1
-      maximum       = 100
-    }
-    resource_limits {
-      resource_type = "memory"
-      minimum       = 1
-      maximum       = 1000
-    }
-  }
+  # Cluster autoscaling (node auto-provisioning) - disabled for simplicity in learning mode
+  # cluster_autoscaling {
+  #   enabled = true
+  #   auto_provisioning_defaults {
+  #     oauth_scopes    = var.oauth_scopes
+  #     service_account = google_service_account.gke_node_sa.email
+  #   }
+  #   resource_limits {
+  #     resource_type = "cpu"
+  #     minimum       = 1
+  #     maximum       = 100
+  #   }
+  #   resource_limits {
+  #     resource_type = "memory"
+  #     minimum       = 1
+  #     maximum       = 1000
+  #   }
+  # }
 
-  # Enable monitoring and logging
-  monitoring_config {
-    enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
-  }
+  # Monitoring and logging - use defaults for learning mode
+  # monitoring_config {
+  #   enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
+  # }
 
-  logging_config {
-    enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
-  }
+  # logging_config {
+  #   enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
+  # }
 
-  # Enable cost management
-  cost_management_config {
-    enabled = true
-  }
+  # Cost management - disabled for learning mode (requires GKE Enterprise or additional setup)
+  # cost_management_config {
+  #   enabled = true
+  # }
 
   # Network configuration
   network    = "default"
@@ -84,10 +86,13 @@ resource "google_container_cluster" "primary" {
 
   # Private cluster configuration
   # For learning mode, private nodes can be disabled for easier access
-  private_cluster_config {
-    enable_private_nodes    = var.enable_private_nodes
-    enable_private_endpoint = false
-    master_ipv4_cidr_block  = var.enable_private_nodes ? "10.0.0.0/28" : null
+  dynamic "private_cluster_config" {
+    for_each = var.enable_private_nodes ? [1] : []
+    content {
+      enable_private_nodes    = true
+      enable_private_endpoint = false
+      master_ipv4_cidr_block  = "10.0.0.0/28"
+    }
   }
 
   # Master authorized networks
@@ -124,8 +129,9 @@ resource "google_container_cluster" "primary" {
     horizontal_pod_autoscaling {
       disabled = false
     }
+    # Network policy addon disabled for learning mode
     network_policy_config {
-      disabled = false
+      disabled = true
     }
   }
 }

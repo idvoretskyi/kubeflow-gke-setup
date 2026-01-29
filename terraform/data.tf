@@ -39,11 +39,9 @@ locals {
   )
 
   # Generate zones based on detected or configured region
-  zones = var.zones_override != null ? var.zones_override : [
-    "${local.region}-a",
-    "${local.region}-b",
-    "${local.region}-c"
-  ]
+  # Note: Not all regions have zone -a (e.g., us-east1 has b, c, d)
+  # For regional clusters, omitting zones lets GKE auto-distribute across available zones
+  zones = var.zones_override != null ? var.zones_override : []
 
   # Account information for verification
   current_account = data.external.gcloud_account.result.account

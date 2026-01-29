@@ -75,28 +75,37 @@ resource "helm_release" "istiod" {
   depends_on = [helm_release.istio_base]
 }
 
+# Local values for Kubeflow manifests - split multi-document YAML files
+locals {
+  # Read raw manifest files
+  manifest_files = {
+    core     = file("${path.module}/manifests/kubeflow-core.yaml")
+    pipeline = file("${path.module}/manifests/kubeflow-pipeline.yaml")
+    notebook = file("${path.module}/manifests/kubeflow-notebook.yaml")
+    katib    = file("${path.module}/manifests/kubeflow-katib.yaml")
+    serving  = file("${path.module}/manifests/kubeflow-serving.yaml")
+  }
+
+  # Split each file by --- and flatten into a list of individual YAML documents
+  # Filter out empty documents
+  all_manifests = flatten([
+    for name, content in local.manifest_files : [
+      for doc in split("\n---\n", content) :
+      trimspace(doc) if trimspace(doc) != "" && !startswith(trimspace(doc), "#")
+    ]
+  ])
+}
+
 # Install Kubeflow using manifest files
 resource "kubernetes_manifest" "kubeflow_manifests" {
-  count = length(local.kubeflow_manifests)
+  count = length(local.all_manifests)
 
-  manifest = yamldecode(local.kubeflow_manifests[count.index])
+  manifest = yamldecode(local.all_manifests[count.index])
 
   depends_on = [
     kubernetes_namespace_v1.kubeflow,
     helm_release.cert_manager,
     helm_release.istiod
-  ]
-}
-
-# Local values for Kubeflow manifests
-locals {
-  kubeflow_manifests = [
-    # Core Kubeflow components
-    file("${path.module}/manifests/kubeflow-core.yaml"),
-    file("${path.module}/manifests/kubeflow-pipeline.yaml"),
-    file("${path.module}/manifests/kubeflow-notebook.yaml"),
-    file("${path.module}/manifests/kubeflow-katib.yaml"),
-    file("${path.module}/manifests/kubeflow-serving.yaml"),
   ]
 }
 
