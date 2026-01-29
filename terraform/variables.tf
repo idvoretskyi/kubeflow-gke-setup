@@ -16,6 +16,12 @@ variable "region" {
   default     = "us-central1"
 }
 
+variable "zone" {
+  description = "GCP zone for zonal cluster (will auto-detect from gcloud config if not provided). For demo/testing, zonal is more cost-effective than regional."
+  type        = string
+  default     = ""
+}
+
 variable "zones_override" {
   description = "Override zones (if not provided, will generate from region)"
   type        = list(string)
@@ -23,9 +29,9 @@ variable "zones_override" {
 }
 
 variable "machine_type" {
-  description = "Machine type for GKE nodes"
+  description = "Machine type for GKE nodes (e2-standard-4 for production, e2-medium for demo/testing)"
   type        = string
-  default     = "e2-standard-4"
+  default     = "e2-medium"
 }
 
 variable "preemptible" {
@@ -41,21 +47,21 @@ variable "min_node_count" {
 }
 
 variable "max_node_count" {
-  description = "Maximum number of nodes in the cluster"
+  description = "Maximum number of nodes in the cluster (5 for demo, 10 for production)"
   type        = number
-  default     = 10
+  default     = 5
 }
 
 variable "initial_node_count" {
-  description = "Initial number of nodes in the cluster"
+  description = "Initial number of nodes in the cluster (2 for demo, 3 for production)"
   type        = number
-  default     = 3
+  default     = 2
 }
 
 variable "disk_size_gb" {
-  description = "Disk size in GB for each node"
+  description = "Disk size in GB for each node (50 for demo, 100 for production)"
   type        = number
-  default     = 100
+  default     = 50
 }
 
 variable "oauth_scopes" {

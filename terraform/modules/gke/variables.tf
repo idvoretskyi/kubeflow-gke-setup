@@ -13,6 +13,12 @@ variable "region" {
   type        = string
 }
 
+variable "zone" {
+  description = "GCP zone for zonal cluster (if empty, uses region for regional cluster)"
+  type        = string
+  default     = ""
+}
+
 variable "zones" {
   description = "List of zones for the cluster"
   type        = list(string)
@@ -87,9 +93,9 @@ variable "learning_mode" {
 }
 
 variable "enable_private_nodes" {
-  description = "Enable private nodes (no public IPs on nodes)"
+  description = "Enable private nodes (no public IPs on nodes). For demo/testing: false (no NAT cost). For production: true (more secure)."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "spot_instances" {

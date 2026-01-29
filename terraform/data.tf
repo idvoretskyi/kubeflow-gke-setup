@@ -38,9 +38,15 @@ locals {
     local.region_from_zone != "" ? local.region_from_zone : var.region
   )
 
-  # Generate zones based on detected or configured region
-  # Note: Not all regions have zone -a (e.g., us-east1 has b, c, d)
-  # For regional clusters, omitting zones lets GKE auto-distribute across available zones
+  # Zone for zonal cluster deployment
+  # Priority: explicit zone variable > detected zone from gcloud > use first zone in region
+  zone = var.zone != "" ? var.zone : (
+    local.detected_zone != "" ? local.detected_zone : "${local.region}-b"
+  )
+
+  # For zonal clusters, zones should be empty (single zone defined by location)
+  # For regional clusters, zones can specify node distribution
+  # For demo/testing: use zonal (cheaper, simpler)
   zones = var.zones_override != null ? var.zones_override : []
 
   # Account information for verification
