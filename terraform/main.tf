@@ -64,6 +64,7 @@ module "gke" {
 
 module "kubeflow" {
   source = "./modules/kubeflow"
+  count  = var.deploy_kubeflow ? 1 : 0
 
   depends_on = [module.gke]
 

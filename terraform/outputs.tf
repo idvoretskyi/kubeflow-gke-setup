@@ -32,12 +32,12 @@ output "detected_config" {
 
 output "kubeflow_access_command" {
   description = "Command to securely access Kubeflow dashboard"
-  value       = module.kubeflow.port_forward_command
+  value       = var.deploy_kubeflow ? module.kubeflow[0].port_forward_command : "Kubeflow not deployed"
 }
 
 output "kubeflow_dashboard_url" {
   description = "Local URL after running port-forward command"
-  value       = module.kubeflow.dashboard_url
+  value       = var.deploy_kubeflow ? module.kubeflow[0].dashboard_url : "Kubeflow not deployed"
 }
 
 output "kubernetes_version" {

@@ -109,3 +109,9 @@ variable "spot_instances" {
   type        = bool
   default     = true
 }
+
+variable "deploy_kubeflow" {
+  description = "Whether to deploy Kubeflow module"
+  type        = bool
+  default     = false
+}
