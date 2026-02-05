@@ -14,7 +14,12 @@ spot_instances     = true
 min_node_count     = 1
 max_node_count     = 10
 initial_node_count = 3
-disk_size_gb       = 100
+disk_size_gb       = 50
+
+# GPU Configuration (Optional)
+# enable_gpu       = true
+# gpu_type         = "nvidia-tesla-t4"
+# gpu_machine_type = "n1-standard-4"
 
 # Master authorized networks — uncomment and add your IP to access the K8s API
 # master_authorized_networks = [

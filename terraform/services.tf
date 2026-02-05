@@ -1,6 +1,5 @@
 # Enable required GCP APIs for Kubeflow deployment
 # These services must be enabled before creating resources
-
 resource "google_project_service" "required_apis" {
   for_each = toset([
     "container.googleapis.com",            # GKE
@@ -13,10 +12,8 @@ resource "google_project_service" "required_apis" {
     "cloudresourcemanager.googleapis.com", # Resource Manager
     "iam.googleapis.com",                  # IAM
   ])
-
-  project = local.project_id
-  service = each.value
-
+  project                    = local.project_id
+  service                    = each.value
   disable_on_destroy         = false
   disable_dependent_services = false
 }

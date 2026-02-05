@@ -24,7 +24,7 @@ spec:
       serviceAccountName: katib-controller
       containers:
       - name: katib-controller
-        image: kubeflowkatib/katib-controller:v0.16.0
+        image: kubeflowkatib/katib-controller:v0.19.0
         ports:
         - containerPort: 8080
         env:
@@ -74,7 +74,7 @@ spec:
     spec:
       containers:
       - name: katib-ui
-        image: kubeflowkatib/katib-ui:v0.16.0
+        image: kubeflowkatib/katib-ui:v0.19.0
         ports:
         - containerPort: 8080
         env:

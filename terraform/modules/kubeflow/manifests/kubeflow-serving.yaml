@@ -24,7 +24,7 @@ spec:
       serviceAccountName: kfserving-controller
       containers:
       - name: manager
-        image: kfserving/kfserving-controller:v0.11.2
+        image: kserve/kserve-controller:v0.15.2
         ports:
         - containerPort: 8080
         env:
@@ -76,7 +76,7 @@ spec:
     spec:
       containers:
       - name: models-web-app
-        image: kubeflownotebookswg/models-web-app:v1.10.0
+        image: kubeflownotebookswg/models-web-app:v0.15.0
         ports:
         - containerPort: 5000
         env:
