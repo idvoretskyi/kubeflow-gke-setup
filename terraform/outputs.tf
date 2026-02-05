@@ -35,54 +35,7 @@ output "kubeflow_endpoint" {
   value       = module.kubeflow.endpoint
 }
 
-output "estimated_monthly_cost" {
-  description = "Estimated monthly cost breakdown"
-  value = {
-    cluster_management_fee = "Free (GKE Autopilot charges apply only for running workloads)"
-    compute_cost_estimate  = "~$${(var.initial_node_count * (var.spot_instances || var.preemptible ? 25 : 73)) * 24 * 30 / 100} per month for ${var.initial_node_count} x ${var.machine_type} nodes"
-    storage_cost_estimate  = "~$${var.initial_node_count * var.disk_size_gb * 0.04} per month for persistent disks"
-    region                 = local.region
-    project                = local.project_id
-    note                   = "Actual costs may vary based on usage patterns and regional pricing"
-  }
-}
-
-# =============================================================================
-# Version Information
-# =============================================================================
-
 output "kubernetes_version" {
-  description = "Kubernetes version running on the cluster (master)"
+  description = "Kubernetes version running on the cluster"
   value       = module.gke.cluster_version
-}
-
-output "node_version" {
-  description = "Kubernetes version running on the nodes"
-  value       = module.gke.node_version
-}
-
-output "quick_start_commands" {
-  description = "Quick start commands for learning and experimentation"
-  value       = <<-EOT
-    # 1. Configure kubectl
-    gcloud container clusters get-credentials ${module.gke.cluster_name} --zone ${local.zone} --project ${local.project_id}
-
-    # 2. Verify cluster access
-    kubectl cluster-info
-    kubectl get nodes
-
-    # 3. Check Kubernetes version
-    kubectl version
-
-    # 4. Access Kubeflow dashboard (via port-forward)
-    kubectl port-forward svc/centraldashboard -n kubeflow 8080:8082
-    # Then open: http://localhost:8080
-    # Or use the LoadBalancer: kubectl get svc kubeflow-dashboard-lb -n kubeflow
-
-    # 5. List Kubeflow components
-    kubectl get pods -n kubeflow
-
-    # 6. Run a sample notebook
-    kubectl get notebooks -n kubeflow
-  EOT
 }

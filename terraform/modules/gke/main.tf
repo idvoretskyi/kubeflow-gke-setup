@@ -9,12 +9,6 @@ resource "google_container_cluster" "primary" {
   remove_default_node_pool = true
   initial_node_count       = 1
 
-  # Network policy - disabled (can cause conflicts with Dataplane V2)
-  # Enable for production use with proper Dataplane configuration
-  # network_policy {
-  #   enabled = true
-  # }
-
   # Enable IP alias for VPC-native networking
   ip_allocation_policy {}
 
@@ -23,61 +17,12 @@ resource "google_container_cluster" "primary" {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
 
-  # Binary authorization (requires Binary Authorization API)
-  # Uncomment to enable
-  # binary_authorization {
-  #   evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
-  # }
-
-  # Resource usage export (for cost tracking)
-  # Uncomment to enable
-  # resource_usage_export_config {
-  #   enable_network_egress_metering       = true
-  #   enable_resource_consumption_metering = true
-  #   bigquery_destination {
-  #     dataset_id = google_bigquery_dataset.gke_usage.dataset_id
-  #   }
-  # }
-
   # Enable maintenance policy
   maintenance_policy {
     daily_maintenance_window {
       start_time = "03:00"
     }
   }
-
-  # Cluster autoscaling (node auto-provisioning) - uncomment to enable
-  # cluster_autoscaling {
-  #   enabled = true
-  #   auto_provisioning_defaults {
-  #     oauth_scopes    = var.oauth_scopes
-  #     service_account = google_service_account.gke_node_sa.email
-  #   }
-  #   resource_limits {
-  #     resource_type = "cpu"
-  #     minimum       = 1
-  #     maximum       = 100
-  #   }
-  #   resource_limits {
-  #     resource_type = "memory"
-  #     minimum       = 1
-  #     maximum       = 1000
-  #   }
-  # }
-
-  # Monitoring and logging - uncomment to customize
-  # monitoring_config {
-  #   enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
-  # }
-
-  # logging_config {
-  #   enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
-  # }
-
-  # Cost management (requires GKE Enterprise or additional setup)
-  # cost_management_config {
-  #   enabled = true
-  # }
 
   # Network configuration
   network    = "default"
@@ -94,9 +39,6 @@ resource "google_container_cluster" "primary" {
   }
 
   # Master authorized networks
-  # Configurable list of authorized networks for enhanced security
-  # Default: empty list (no external access, only via GCP Console)
-  # To allow specific IPs: set master_authorized_networks variable
   dynamic "master_authorized_networks_config" {
     for_each = length(var.master_authorized_networks) > 0 ? [1] : []
     content {
@@ -110,8 +52,6 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  # Release channel for automatic updates
-  # RAPID = Latest K8s (1.35), REGULAR = Balanced (1.33), STABLE = Production (1.33)
   release_channel {
     channel = var.release_channel
   }

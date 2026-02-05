@@ -1,69 +1,22 @@
-# Example Terraform variables file
-# Copy this file to terraform.tfvars and update with your values
-#
-# NOTE: project_id and region will be auto-detected from your gcloud config
-# You only need to override them if you want to use different values
+# Copy this file to terraform.tfvars and update with your values.
+# Project, region, and zone are auto-detected from gcloud config.
 
-# Optional overrides (will auto-detect from gcloud config if not provided)
-# project_id = "your-gcp-project-id"   # Auto-detected from: gcloud config get-value project
-# region = "us-central1"               # Auto-detected from: gcloud config get-value compute/region
+# project_id = "your-gcp-project-id"
+# region     = "us-central1"
 
-# Optional variables with defaults
-cluster_name = "kubeflow-cluster"
-
-# =============================================================================
-# GKE VERSION AND RELEASE CHANNEL
-# =============================================================================
-# Choose your release channel based on your needs:
-#   - RAPID:   Latest Kubernetes (1.35) - Best for learning/demos, newest features
-#   - REGULAR: Balanced (1.33) - Good stability with recent features
-#   - STABLE:  Production-ready (1.33) - Most stable, fewer updates
-release_channel = "RAPID"  # Recommended for learning - get the latest K8s features!
-
-# Private nodes setting (recommended for production)
+cluster_name         = "kubeflow-cluster"
+release_channel      = "RAPID"
 enable_private_nodes = true
 
-# =============================================================================
-# COST-EFFECTIVE CONFIGURATION
-# =============================================================================
-machine_type = "e2-standard-4"  # Good balance of CPU/memory for ML workloads
-spot_instances = true           # Use Spot VMs for 60-91% cost savings (recommended)
-preemptible = false             # Legacy option, use spot_instances instead
-min_node_count = 1              # Minimum nodes (cost optimization)
-max_node_count = 10             # Maximum nodes (can scale up for demanding workloads)
-initial_node_count = 3          # Initial nodes
+# Cost optimization
+machine_type       = "e2-standard-4"
+spot_instances     = true
+min_node_count     = 1
+max_node_count     = 10
+initial_node_count = 3
+disk_size_gb       = 100
 
-# Storage configuration
-disk_size_gb = 100              # 100GB should be sufficient for most ML workloads
-
-# Optional domain for custom endpoint
-domain = ""                     # Leave empty for default LoadBalancer IP
-
-# OAuth scopes (default values work for most cases)
-oauth_scopes = [
-  "https://www.googleapis.com/auth/cloud-platform",
-  "https://www.googleapis.com/auth/devstorage.read_only",
-  "https://www.googleapis.com/auth/logging.write",
-  "https://www.googleapis.com/auth/monitoring",
-  "https://www.googleapis.com/auth/service.management.readonly",
-  "https://www.googleapis.com/auth/servicecontrol",
-  "https://www.googleapis.com/auth/trace.append"
-]
-
-# Master authorized networks (for enhanced security)
-# Default: empty list (no external access to Kubernetes API, only via GCP Console)
-# Uncomment and configure to allow specific IP addresses/ranges to access the cluster API
-#
-# SECURITY BEST PRACTICE: Only add your trusted IP addresses
-# To get your current IP: curl -s https://ifconfig.me
-#
+# Master authorized networks — uncomment and add your IP to access the K8s API
 # master_authorized_networks = [
-#   {
-#     cidr_block   = "203.0.113.0/24"  # Example: Your office network
-#     display_name = "Office Network"
-#   },
-#   {
-#     cidr_block   = "198.51.100.5/32"  # Example: Your home IP (use /32 for single IP)
-#     display_name = "Home IP"
-#   }
+#   { cidr_block = "YOUR_IP/32", display_name = "Workstation" }
 # ]

@@ -48,7 +48,6 @@ module "gke" {
   region       = local.region
   zone         = local.zone
 
-  # Cost-effective configuration for demo/testing
   machine_type       = var.machine_type
   preemptible        = var.preemptible
   spot_instances     = var.spot_instances
@@ -56,11 +55,9 @@ module "gke" {
   max_node_count     = var.max_node_count
   initial_node_count = var.initial_node_count
 
-  # Kubeflow-specific requirements
   disk_size_gb = var.disk_size_gb
   oauth_scopes = var.oauth_scopes
 
-  # GKE version and networking
   release_channel      = var.release_channel
   enable_private_nodes = var.enable_private_nodes
 }
