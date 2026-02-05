@@ -154,10 +154,11 @@ resource "google_service_account_iam_binding" "kubeflow_workload_identity" {
   ]
 }
 
-# Create LoadBalancer service for Kubeflow Central Dashboard
+# Create ClusterIP service for Kubeflow Central Dashboard
+# For secure access, use kubectl port-forward instead of public LoadBalancer
 resource "kubernetes_service_v1" "kubeflow_dashboard" {
   metadata {
-    name      = "kubeflow-dashboard-lb"
+    name      = "kubeflow-dashboard-svc"
     namespace = kubernetes_namespace_v1.kubeflow.metadata[0].name
     labels = {
       "app.kubernetes.io/name" = "kubeflow-dashboard"
@@ -165,7 +166,7 @@ resource "kubernetes_service_v1" "kubeflow_dashboard" {
   }
 
   spec {
-    type = "LoadBalancer"
+    type = "ClusterIP"
 
     selector = {
       "app.kubernetes.io/name" = "centraldashboard"
@@ -175,11 +176,66 @@ resource "kubernetes_service_v1" "kubeflow_dashboard" {
       port        = 80
       target_port = 8082
       protocol    = "TCP"
+      name        = "http"
     }
   }
 
   depends_on = [kubernetes_manifest.kubeflow_manifests]
 }
+
+# OPTIONAL: For production deployments with HTTPS, uncomment the configuration below
+# This creates an Ingress with Google-managed SSL certificate
+
+# Uncomment to enable HTTPS access via Ingress
+# resource "google_compute_global_address" "kubeflow_ip" {
+#   name = "${var.cluster_name}-kubeflow-ip"
+# }
+
+# resource "google_compute_managed_ssl_certificate" "kubeflow_cert" {
+#   name = "${var.cluster_name}-kubeflow-cert"
+#
+#   managed {
+#     domains = [var.domain]  # Set domain variable, e.g., "kubeflow.example.com"
+#   }
+# }
+
+# resource "kubernetes_ingress_v1" "kubeflow_ingress" {
+#   metadata {
+#     name      = "kubeflow-ingress"
+#     namespace = kubernetes_namespace_v1.kubeflow.metadata[0].name
+#     annotations = {
+#       "kubernetes.io/ingress.class"                    = "gce"
+#       "kubernetes.io/ingress.global-static-ip-name"   = google_compute_global_address.kubeflow_ip.name
+#       "ingress.gcp.kubernetes.io/pre-shared-cert"     = google_compute_managed_ssl_certificate.kubeflow_cert.name
+#       "kubernetes.io/ingress.allow-http"               = "false"  # Force HTTPS only
+#     }
+#   }
+#
+#   spec {
+#     rule {
+#       host = var.domain
+#       http {
+#         path {
+#           path      = "/*"
+#           path_type = "ImplementationSpecific"
+#           backend {
+#             service {
+#               name = kubernetes_service_v1.kubeflow_dashboard.metadata[0].name
+#               port {
+#                 number = 80
+#               }
+#             }
+#           }
+#         }
+#       }
+#     }
+#   }
+#
+#   depends_on = [
+#     kubernetes_service_v1.kubeflow_dashboard,
+#     google_compute_managed_ssl_certificate.kubeflow_cert
+#   ]
+# }
 
 # Create Cloud Storage bucket for Kubeflow artifacts
 resource "google_storage_bucket" "kubeflow_artifacts" {
