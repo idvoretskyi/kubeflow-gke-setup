@@ -38,16 +38,11 @@ locals {
     local.region_from_zone != "" ? local.region_from_zone : var.region
   )
 
-  # Zone for zonal cluster deployment
-  # Priority: explicit zone variable > detected zone from gcloud > use first zone in region
+  # Zone for zonal cluster deployment (required - only zonal clusters supported)
+  # Priority: explicit zone variable > detected zone from gcloud > default zone in region
   zone = var.zone != "" ? var.zone : (
     local.detected_zone != "" ? local.detected_zone : "${local.region}-b"
   )
-
-  # For zonal clusters, zones should be empty (single zone defined by location)
-  # For regional clusters, zones can specify node distribution
-  # For demo/testing: use zonal (cheaper, simpler)
-  zones = var.zones_override != null ? var.zones_override : []
 
   # Account information for verification
   current_account = data.external.gcloud_account.result.account

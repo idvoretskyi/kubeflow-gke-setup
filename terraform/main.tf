@@ -47,7 +47,6 @@ module "gke" {
   cluster_name = var.cluster_name
   region       = local.region
   zone         = local.zone
-  zones        = local.zones
 
   # Cost-effective configuration for demo/testing
   machine_type       = var.machine_type

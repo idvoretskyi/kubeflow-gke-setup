@@ -14,14 +14,13 @@ variable "region" {
 }
 
 variable "zone" {
-  description = "GCP zone for zonal cluster (if empty, uses region for regional cluster)"
+  description = "GCP zone for the zonal cluster (required). Only zonal clusters are supported for cost optimization."
   type        = string
-  default     = ""
-}
 
-variable "zones" {
-  description = "List of zones for the cluster"
-  type        = list(string)
+  validation {
+    condition     = length(var.zone) > 0
+    error_message = "Zone must be specified. Only zonal clusters are supported (e.g., 'us-east1-c')."
+  }
 }
 
 variable "machine_type" {

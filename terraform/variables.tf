@@ -22,12 +22,6 @@ variable "zone" {
   default     = ""
 }
 
-variable "zones_override" {
-  description = "Override zones (if not provided, will generate from region)"
-  type        = list(string)
-  default     = null
-}
-
 variable "machine_type" {
   description = "Machine type for GKE nodes (e2-standard-4 for production, e2-medium for demo/testing)"
   type        = string

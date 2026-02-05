@@ -17,7 +17,7 @@ output "cluster_ca_certificate" {
 
 output "kubeconfig_command" {
   description = "Command to configure kubectl"
-  value       = "gcloud container clusters get-credentials ${module.gke.cluster_name} --region ${local.region} --project ${local.project_id}"
+  value       = "gcloud container clusters get-credentials ${module.gke.cluster_name} --zone ${local.zone} --project ${local.project_id}"
 }
 
 output "detected_config" {
@@ -25,7 +25,7 @@ output "detected_config" {
   value = {
     project_id = local.project_id
     region     = local.region
-    zones      = local.zones
+    zone       = local.zone
     account    = local.current_account
   }
 }
@@ -77,7 +77,7 @@ output "quick_start_commands" {
   description = "Quick start commands for learning and experimentation"
   value       = <<-EOT
     # 1. Configure kubectl
-    gcloud container clusters get-credentials ${module.gke.cluster_name} --region ${local.region} --project ${local.project_id}
+    gcloud container clusters get-credentials ${module.gke.cluster_name} --zone ${local.zone} --project ${local.project_id}
 
     # 2. Verify cluster access
     kubectl cluster-info

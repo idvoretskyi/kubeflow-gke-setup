@@ -1,9 +1,6 @@
 resource "google_container_cluster" "primary" {
-  name     = var.cluster_name
-  location = var.zone != "" ? var.zone : var.region
-  # For zonal clusters: node_locations should be null (nodes in same zone as control plane)
-  # For regional clusters: node_locations can specify additional zones
-  node_locations      = var.zone == "" && length(var.zones) > 0 ? var.zones : null
+  name                = var.cluster_name
+  location            = var.zone
   deletion_protection = false
 
   # We can't create a cluster with no node pool defined, but we want to only use
@@ -141,7 +138,7 @@ resource "google_container_cluster" "primary" {
 # Create a separately managed node pool for cost optimization
 resource "google_container_node_pool" "primary_nodes" {
   name       = "${var.cluster_name}-nodes"
-  location   = var.zone != "" ? var.zone : var.region
+  location   = var.zone
   cluster    = google_container_cluster.primary.name
   node_count = var.initial_node_count
 
