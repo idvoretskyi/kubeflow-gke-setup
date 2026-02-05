@@ -14,7 +14,12 @@ variable "region" {
 }
 
 variable "domain" {
-  description = "Domain name for Kubeflow (optional)"
+  description = <<-EOT
+    Domain name for Kubeflow HTTPS ingress (optional).
+    Required only if you uncomment the HTTPS Ingress configuration in main.tf.
+    Example: "kubeflow.example.com"
+    You must point this domain's DNS A record to the ingress IP output.
+  EOT
   type        = string
   default     = ""
 }

@@ -30,9 +30,14 @@ output "detected_config" {
   }
 }
 
-output "kubeflow_endpoint" {
-  description = "Kubeflow dashboard endpoint (WARNING: HTTP only, use kubectl port-forward for secure access or configure HTTPS ingress for production)"
-  value       = module.kubeflow.endpoint
+output "kubeflow_access_command" {
+  description = "Command to securely access Kubeflow dashboard"
+  value       = module.kubeflow.port_forward_command
+}
+
+output "kubeflow_dashboard_url" {
+  description = "Local URL after running port-forward command"
+  value       = module.kubeflow.dashboard_url
 }
 
 output "kubernetes_version" {

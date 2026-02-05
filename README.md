@@ -61,21 +61,44 @@ master_authorized_networks = [
 # View outputs (endpoints, kubeconfig command, etc.)
 terraform -chdir=terraform output
 
-# Access Kubeflow dashboard
-kubectl port-forward svc/centraldashboard -n kubeflow 8080:8082
+# Access Kubeflow dashboard securely via port-forward
+# Get the exact command from Terraform outputs:
+terraform -chdir=terraform output kubeflow_access_command
+
+# Or run directly:
+kubectl port-forward -n kubeflow svc/kubeflow-dashboard-svc 8080:80
 # Then open http://localhost:8080
 
 # Run ML pipelines
 cd examples/sample-ml-app
 python data_generator.py
 python run_pipeline.py \
-    --kubeflow-endpoint http://YOUR_CLUSTER_IP \
+    --kubeflow-endpoint http://localhost:8080 \
     --bucket-name your-gcs-bucket \
     --data-file sample_datasets/classification_data.csv
 
 # Destroy
 terraform -chdir=terraform destroy
 ```
+
+## Security
+
+### Secure Dashboard Access
+
+The Kubeflow dashboard is **not exposed to the public internet** by default. Access is via `kubectl port-forward`, which provides:
+
+- ✅ **No public exposure** - dashboard only accessible via authenticated kubectl
+- ✅ **Encrypted transit** - kubectl creates an encrypted tunnel to GKE
+- ✅ **Authentication** - requires valid GKE/Google Cloud credentials
+- ✅ **Zero cost** - no load balancer fees
+
+### HTTPS for Production (Optional)
+
+For production deployments requiring HTTPS, see [terraform/modules/kubeflow/SECURITY.md](terraform/modules/kubeflow/SECURITY.md) for:
+- Google-managed SSL certificates
+- HTTPS Ingress configuration
+- Identity-Aware Proxy (IAP) setup
+- Cost and architecture considerations
 
 ## License
 
