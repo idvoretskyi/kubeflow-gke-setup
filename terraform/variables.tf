@@ -16,16 +16,16 @@ variable "region" {
   default     = "us-central1"
 }
 
-variable "zones_override" {
-  description = "Override zones (if not provided, will generate from region)"
-  type        = list(string)
-  default     = null
+variable "zone" {
+  description = "GCP zone for zonal cluster (will auto-detect from gcloud config if not provided). For demo/testing, zonal is more cost-effective than regional."
+  type        = string
+  default     = ""
 }
 
 variable "machine_type" {
-  description = "Machine type for GKE nodes"
+  description = "Machine type for GKE nodes (e2-standard-4 for production, e2-medium for demo/testing)"
   type        = string
-  default     = "e2-standard-4"
+  default     = "e2-medium"
 }
 
 variable "preemptible" {
@@ -41,21 +41,21 @@ variable "min_node_count" {
 }
 
 variable "max_node_count" {
-  description = "Maximum number of nodes in the cluster"
+  description = "Maximum number of nodes in the cluster (5 for demo, 10 for production)"
   type        = number
-  default     = 10
+  default     = 5
 }
 
 variable "initial_node_count" {
-  description = "Initial number of nodes in the cluster"
+  description = "Initial number of nodes in the cluster (2 for demo, 3 for production)"
   type        = number
-  default     = 3
+  default     = 2
 }
 
 variable "disk_size_gb" {
-  description = "Disk size in GB for each node"
+  description = "Disk size in GB for each node (50 for demo, 100 for production)"
   type        = number
-  default     = 100
+  default     = 50
 }
 
 variable "oauth_scopes" {
@@ -76,4 +76,42 @@ variable "domain" {
   description = "Domain name for Kubeflow (optional)"
   type        = string
   default     = ""
+}
+
+# =============================================================================
+# GKE Version and Cluster Configuration
+# =============================================================================
+
+variable "release_channel" {
+  description = <<-EOT
+    GKE release channel for automatic Kubernetes version management.
+    - RAPID: Latest K8s features (currently 1.35)
+    - REGULAR: Balanced stability and features (currently 1.33)
+    - STABLE: Most stable, production-ready (currently 1.33)
+  EOT
+  type        = string
+  default     = "RAPID"
+
+  validation {
+    condition     = contains(["RAPID", "REGULAR", "STABLE", "UNSPECIFIED"], var.release_channel)
+    error_message = "Release channel must be one of: RAPID, REGULAR, STABLE, UNSPECIFIED."
+  }
+}
+
+variable "enable_private_nodes" {
+  description = "Enable private nodes (no public IPs on nodes). Recommended for production."
+  type        = bool
+  default     = true
+}
+
+variable "spot_instances" {
+  description = "Use Spot VMs instead of preemptible (newer, recommended). Spot VMs provide same 60-91% discount."
+  type        = bool
+  default     = true
+}
+
+variable "deploy_kubeflow" {
+  description = "Whether to deploy Kubeflow module"
+  type        = bool
+  default     = false
 }

@@ -1,7 +1,6 @@
 resource "google_container_cluster" "primary" {
   name                = var.cluster_name
-  location            = var.region
-  node_locations      = var.zones
+  location            = var.zone
   deletion_protection = false
 
   # We can't create a cluster with no node pool defined, but we want to only use
@@ -9,11 +8,6 @@ resource "google_container_cluster" "primary" {
   # node pool and immediately delete it.
   remove_default_node_pool = true
   initial_node_count       = 1
-
-  # Enable network policy
-  network_policy {
-    enabled = true
-  }
 
   # Enable IP alias for VPC-native networking
   ip_allocation_policy {}
@@ -23,20 +17,6 @@ resource "google_container_cluster" "primary" {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
 
-  # Enable binary authorization
-  binary_authorization {
-    evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
-  }
-
-  # Enable resource usage export
-  resource_usage_export_config {
-    enable_network_egress_metering       = true
-    enable_resource_consumption_metering = true
-    bigquery_destination {
-      dataset_id = google_bigquery_dataset.gke_usage.dataset_id
-    }
-  }
-
   # Enable maintenance policy
   maintenance_policy {
     daily_maintenance_window {
@@ -44,55 +24,21 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  # Enable cluster autoscaling
-  cluster_autoscaling {
-    enabled = true
-    auto_provisioning_defaults {
-      min_cpu_platform = "Intel Haswell"
-      oauth_scopes     = var.oauth_scopes
-      service_account  = google_service_account.gke_node_sa.email
-    }
-    resource_limits {
-      resource_type = "cpu"
-      minimum       = 1
-      maximum       = 100
-    }
-    resource_limits {
-      resource_type = "memory"
-      minimum       = 1
-      maximum       = 1000
-    }
-  }
-
-  # Enable monitoring and logging
-  monitoring_config {
-    enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
-  }
-
-  logging_config {
-    enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
-  }
-
-  # Enable cost management
-  cost_management_config {
-    enabled = true
-  }
-
   # Network configuration
   network    = "default"
   subnetwork = "default"
 
-  # Enable private nodes for security
-  private_cluster_config {
-    enable_private_nodes    = true
-    enable_private_endpoint = false
-    master_ipv4_cidr_block  = "10.0.0.0/28"
+  # Private cluster configuration
+  dynamic "private_cluster_config" {
+    for_each = var.enable_private_nodes ? [1] : []
+    content {
+      enable_private_nodes    = true
+      enable_private_endpoint = false
+      master_ipv4_cidr_block  = "10.0.0.0/28"
+    }
   }
 
   # Master authorized networks
-  # Configurable list of authorized networks for enhanced security
-  # Default: empty list (no external access, only via GCP Console)
-  # To allow specific IPs: set master_authorized_networks variable
   dynamic "master_authorized_networks_config" {
     for_each = length(var.master_authorized_networks) > 0 ? [1] : []
     content {
@@ -106,9 +52,8 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  # Release channel for automatic updates
   release_channel {
-    channel = "REGULAR"
+    channel = var.release_channel
   }
 
   # Enable shielded nodes
@@ -123,7 +68,7 @@ resource "google_container_cluster" "primary" {
       disabled = false
     }
     network_policy_config {
-      disabled = false
+      disabled = true
     }
   }
 }
@@ -131,7 +76,7 @@ resource "google_container_cluster" "primary" {
 # Create a separately managed node pool for cost optimization
 resource "google_container_node_pool" "primary_nodes" {
   name       = "${var.cluster_name}-nodes"
-  location   = var.region
+  location   = var.zone
   cluster    = google_container_cluster.primary.name
   node_count = var.initial_node_count
 
@@ -148,7 +93,9 @@ resource "google_container_node_pool" "primary_nodes" {
   }
 
   node_config {
-    preemptible     = var.preemptible
+    # Use Spot VMs (recommended) or preemptible for cost savings (60-91% discount)
+    spot            = var.spot_instances
+    preemptible     = var.spot_instances ? false : var.preemptible
     machine_type    = var.machine_type
     disk_size_gb    = var.disk_size_gb
     disk_type       = "pd-ssd"
@@ -173,7 +120,7 @@ resource "google_container_node_pool" "primary_nodes" {
       cost-center = "research"
     }
 
-    # Taints for Kubeflow workloads
+    # Taint to ensure only Kubeflow workloads schedule on these nodes
     taint {
       key    = "kubeflow"
       value  = "true"

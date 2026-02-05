@@ -13,9 +13,14 @@ variable "region" {
   type        = string
 }
 
-variable "zones" {
-  description = "List of zones for the cluster"
-  type        = list(string)
+variable "zone" {
+  description = "GCP zone for the zonal cluster (required). Only zonal clusters are supported for cost optimization."
+  type        = string
+
+  validation {
+    condition     = length(var.zone) > 0
+    error_message = "Zone must be specified. Only zonal clusters are supported (e.g., 'us-east1-c')."
+  }
 }
 
 variable "machine_type" {
@@ -68,4 +73,26 @@ variable "master_authorized_networks" {
     ])
     error_message = "All cidr_block values must be valid CIDR notation (e.g., '203.0.113.0/24')."
   }
+}
+
+# =============================================================================
+# GKE Version and Cluster Configuration
+# =============================================================================
+
+variable "release_channel" {
+  description = "GKE release channel: RAPID (latest K8s 1.35), REGULAR (1.33), STABLE (1.33)"
+  type        = string
+  default     = "RAPID"
+}
+
+variable "enable_private_nodes" {
+  description = "Enable private nodes (no public IPs on nodes). For demo/testing: false (no NAT cost). For production: true (more secure)."
+  type        = bool
+  default     = false
+}
+
+variable "spot_instances" {
+  description = "Use Spot VMs instead of preemptible (newer API, same discount)"
+  type        = bool
+  default     = true
 }

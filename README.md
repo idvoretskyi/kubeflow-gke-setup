@@ -1,196 +1,104 @@
 # Kubeflow on GKE Setup
 
-Automated deployment of Kubeflow 1.10.0 on Google Kubernetes Engine using Terraform with security hardening and cost optimization.
-
-## Overview
-
-This repository provides production-ready infrastructure-as-code for deploying Kubeflow on GKE with:
-
-- **Automated deployment** via single command with gcloud configuration auto-detection
-- **Cost optimization** using preemptible nodes with autoscaling (1-10 nodes)
-- **Security hardening** including private nodes, least-privilege IAM, and configurable network access
-- **ML pipeline examples** demonstrating end-to-end workflows
-- **CI/CD validation** with automated Terraform, Python, and shell script testing
+Production-grade, cost-optimized deployment of Kubeflow 1.10.0 on Google Kubernetes Engine using Terraform.
 
 ## Quick Start
 
-### Prerequisites
-
-- GCP account with billing enabled
-- `gcloud`, `terraform`, and `kubectl` installed
-
-### Deployment
+**Prerequisites**: GCP account with billing enabled, `gcloud`, `terraform`, `kubectl` installed.
 
 ```bash
 git clone https://github.com/idvoretskyi/kubeflow-gke-setup.git
 cd kubeflow-gke-setup/terraform
 
-# Configure your GCP project
 gcloud config set project YOUR_PROJECT_ID
 gcloud auth application-default login
 
-# Initialize and deploy
 terraform init
 terraform plan
 terraform apply
 ```
 
-Terraform auto-detects gcloud configuration and provisions all infrastructure.
+Terraform auto-detects your gcloud configuration (project, region, zone).
 
-## Infrastructure Components
+## What Gets Deployed
 
-**Compute**:
-- GKE cluster with preemptible nodes (e2-standard-4)
-- Autoscaling: 1-10 nodes based on demand
-- 100GB SSD per node
+- **GKE zonal cluster** with Spot VMs and autoscaling (1-10 nodes)
+- **Kubeflow 1.10.0** with Jupyter, Pipelines, Katib, KServe
+- **Istio 1.19.3** service mesh + **cert-manager 1.13.2**
+- **Security**: private nodes, Workload Identity, least-privilege IAM, shielded nodes
 
-**Platform**:
-- Kubeflow 1.10.0 (Jupyter, Pipelines, Katib, KServe)
-- Istio 1.19.3 service mesh
-- cert-manager 1.13.2
-
-**Security**:
-- Private cluster (no public master endpoint by default)
-- Workload Identity for pod-to-GCP authentication
-- Least-privilege IAM service accounts
-- Network policies and binary authorization
-- Shielded nodes with Secure Boot
-
-**Estimated Cost**: $50-150/month depending on workload
-
-## Usage
-
-### Running ML Pipelines
-
-```bash
-cd examples/sample-ml-app
-python data_generator.py
-python run_pipeline.py \
-    --kubeflow-endpoint http://YOUR_CLUSTER_IP \
-    --bucket-name your-gcs-bucket \
-    --data-file sample_datasets/classification_data.csv
-```
-
-### Cluster Management
-
-```bash
-cd terraform
-
-# View current state
-terraform show
-
-# View outputs (cluster endpoint, etc.)
-terraform output
-
-# Destroy infrastructure
-terraform destroy
-
-# Monitor Kubeflow components
-kubectl get pods -n kubeflow
-```
+**Estimated cost**: $30-100/month with Spot VMs (60-91% savings vs on-demand).
 
 ## Configuration
 
-### Master Authorized Networks
-
-By default, the Kubernetes API is not publicly accessible. To enable access from specific IP addresses:
+Copy and edit the example tfvars:
 
 ```bash
-cd terraform
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-Edit `terraform.tfvars`:
+Key variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `release_channel` | `RAPID` | GKE release channel (RAPID/REGULAR/STABLE) |
+| `spot_instances` | `true` | Use Spot VMs for cost savings |
+| `enable_private_nodes` | `true` | Private nodes (no public IPs) |
+| `machine_type` | `e2-medium` | Node machine type |
+| `min_node_count` / `max_node_count` | 1 / 5 | Autoscaling range |
+
+To allow API access from specific IPs:
 
 ```hcl
 master_authorized_networks = [
-  {
-    cidr_block   = "YOUR_IP/32"
-    display_name = "Workstation"
-  }
+  { cidr_block = "YOUR_IP/32", display_name = "Workstation" }
 ]
 ```
 
-Apply configuration:
+## Usage
 
 ```bash
-cd terraform
-terraform apply
+# View outputs (endpoints, kubeconfig command, etc.)
+terraform -chdir=terraform output
+
+# Access Kubeflow dashboard securely via port-forward
+# Get the exact command from Terraform outputs:
+terraform -chdir=terraform output kubeflow_access_command
+
+# Or run directly:
+kubectl port-forward -n kubeflow svc/kubeflow-dashboard-svc 8080:80
+# Then open http://localhost:8080
+
+# Run ML pipelines
+cd examples/sample-ml-app
+python data_generator.py
+python run_pipeline.py \
+    --kubeflow-endpoint http://localhost:8080 \
+    --bucket-name your-gcs-bucket \
+    --data-file sample_datasets/classification_data.csv
+
+# Destroy
+terraform -chdir=terraform destroy
 ```
 
-Without configured authorized networks, cluster access is limited to GCP Console and Cloud Shell.
+## Security
 
-## Architecture
+### Secure Dashboard Access
 
-**Infrastructure**:
-- Modular Terraform codebase with separate GKE and Kubeflow modules
-- Auto-detection of gcloud project, region, and zone configuration
-- Automated BigQuery dataset creation for cost tracking
+The Kubeflow dashboard is **not exposed to the public internet** by default. Access is via `kubectl port-forward`, which provides:
 
-**Security Model**:
-- Private GKE cluster with configurable master authorized networks
-- Workload Identity binding between Kubernetes and GCP service accounts
-- IAM roles following least-privilege principle:
-  - `storage.objectAdmin` (not `storage.admin`)
-  - `bigquery.dataEditor` (not `bigquery.admin`)
-  - `aiplatform.user` (not `ml.admin`)
-- Network policies and binary authorization enabled
+- ✅ **No public exposure** - dashboard only accessible via authenticated kubectl
+- ✅ **Encrypted transit** - kubectl creates an encrypted tunnel to GKE
+- ✅ **Authentication** - requires valid GKE/Google Cloud credentials
+- ✅ **Zero cost** - no load balancer fees
 
-**Cost Controls**:
-- Preemptible nodes (80% cost reduction vs standard nodes)
-- Node autoscaling (1-10 based on workload)
-- Automatic storage lifecycle (30-day retention)
-- Resource usage export to BigQuery for analysis
+### HTTPS for Production (Optional)
 
-## Troubleshooting
-
-Verify Terraform configuration:
-```bash
-cd terraform
-terraform validate
-terraform plan
-```
-
-Check gcloud authentication:
-```bash
-gcloud auth application-default login
-gcloud config list
-```
-
-Common diagnostics:
-```bash
-kubectl get nodes
-kubectl get pods -n kubeflow
-kubectl logs <pod-name> -n kubeflow
-```
-
-## Development
-
-**Testing**:
-```bash
-cd terraform
-terraform fmt -check -recursive      # Check formatting
-terraform validate                    # Validate configuration
-cd ../examples/sample-ml-app
-python -m py_compile *.py             # Python syntax
-```
-
-**CI/CD**:
-- Automated validation via GitHub Actions
-- Terraform format and validation checks
-- Python syntax verification
-
-## Recent Changes
-
-**Security** (December 2024):
-- Reduced IAM permissions to least-privilege roles
-- Configurable master authorized networks (default: no public access)
-- Added CIDR validation for network configurations
-
-**Code Quality**:
-- Fixed Python package version inconsistencies across pipeline components
-- Refactored bash scripts with shared utility library (`scripts/lib/common.sh`)
-- Updated Terraform syntax for Helm provider v3.x compatibility
+For production deployments requiring HTTPS, see [terraform/modules/kubeflow/SECURITY.md](terraform/modules/kubeflow/SECURITY.md) for:
+- Google-managed SSL certificates
+- HTTPS Ingress configuration
+- Identity-Aware Proxy (IAP) setup
+- Cost and architecture considerations
 
 ## License
 

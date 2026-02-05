@@ -4,7 +4,7 @@ locals {
 }
 
 # Create namespace for Kubeflow
-resource "kubernetes_namespace" "kubeflow" {
+resource "kubernetes_namespace_v1" "kubeflow" {
   metadata {
     name = "kubeflow"
     labels = {
@@ -14,7 +14,7 @@ resource "kubernetes_namespace" "kubeflow" {
   }
 }
 
-resource "kubernetes_namespace" "istio_system" {
+resource "kubernetes_namespace_v1" "istio_system" {
   metadata {
     name = "istio-system"
     labels = {
@@ -23,7 +23,7 @@ resource "kubernetes_namespace" "istio_system" {
   }
 }
 
-resource "kubernetes_namespace" "cert_manager" {
+resource "kubernetes_namespace_v1" "cert_manager" {
   metadata {
     name = "cert-manager"
     labels = {
@@ -38,7 +38,7 @@ resource "helm_release" "cert_manager" {
   repository = "https://charts.jetstack.io"
   chart      = "cert-manager"
   version    = "v1.13.2"
-  namespace  = kubernetes_namespace.cert_manager.metadata[0].name
+  namespace  = kubernetes_namespace_v1.cert_manager.metadata[0].name
 
   set = [
     {
@@ -47,11 +47,11 @@ resource "helm_release" "cert_manager" {
     },
     {
       name  = "global.leaderElection.namespace"
-      value = kubernetes_namespace.cert_manager.metadata[0].name
+      value = kubernetes_namespace_v1.cert_manager.metadata[0].name
     }
   ]
 
-  depends_on = [kubernetes_namespace.cert_manager]
+  depends_on = [kubernetes_namespace_v1.cert_manager]
 }
 
 # Install Istio using Helm
@@ -60,9 +60,9 @@ resource "helm_release" "istio_base" {
   repository = "https://istio-release.storage.googleapis.com/charts"
   chart      = "base"
   version    = "1.19.3"
-  namespace  = kubernetes_namespace.istio_system.metadata[0].name
+  namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
 
-  depends_on = [kubernetes_namespace.istio_system]
+  depends_on = [kubernetes_namespace_v1.istio_system]
 }
 
 resource "helm_release" "istiod" {
@@ -70,41 +70,50 @@ resource "helm_release" "istiod" {
   repository = "https://istio-release.storage.googleapis.com/charts"
   chart      = "istiod"
   version    = "1.19.3"
-  namespace  = kubernetes_namespace.istio_system.metadata[0].name
+  namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
 
   depends_on = [helm_release.istio_base]
 }
 
+# Local values for Kubeflow manifests - split multi-document YAML files
+locals {
+  # Read raw manifest files
+  manifest_files = {
+    core     = file("${path.module}/manifests/kubeflow-core.yaml")
+    pipeline = file("${path.module}/manifests/kubeflow-pipeline.yaml")
+    notebook = file("${path.module}/manifests/kubeflow-notebook.yaml")
+    katib    = file("${path.module}/manifests/kubeflow-katib.yaml")
+    serving  = file("${path.module}/manifests/kubeflow-serving.yaml")
+  }
+
+  # Split each file by --- and flatten into a list of individual YAML documents
+  # Filter out empty documents
+  all_manifests = flatten([
+    for name, content in local.manifest_files : [
+      for doc in split("\n---\n", content) :
+      trimspace(doc) if trimspace(doc) != "" && !startswith(trimspace(doc), "#")
+    ]
+  ])
+}
+
 # Install Kubeflow using manifest files
 resource "kubernetes_manifest" "kubeflow_manifests" {
-  count = length(local.kubeflow_manifests)
+  count = length(local.all_manifests)
 
-  manifest = yamldecode(local.kubeflow_manifests[count.index])
+  manifest = yamldecode(local.all_manifests[count.index])
 
   depends_on = [
-    kubernetes_namespace.kubeflow,
+    kubernetes_namespace_v1.kubeflow,
     helm_release.cert_manager,
     helm_release.istiod
   ]
 }
 
-# Local values for Kubeflow manifests
-locals {
-  kubeflow_manifests = [
-    # Core Kubeflow components
-    file("${path.module}/manifests/kubeflow-core.yaml"),
-    file("${path.module}/manifests/kubeflow-pipeline.yaml"),
-    file("${path.module}/manifests/kubeflow-notebook.yaml"),
-    file("${path.module}/manifests/kubeflow-katib.yaml"),
-    file("${path.module}/manifests/kubeflow-serving.yaml"),
-  ]
-}
-
 # Create a service account for Kubeflow
-resource "kubernetes_service_account" "kubeflow_sa" {
+resource "kubernetes_service_account_v1" "kubeflow_sa" {
   metadata {
     name      = "kubeflow-service-account"
-    namespace = kubernetes_namespace.kubeflow.metadata[0].name
+    namespace = kubernetes_namespace_v1.kubeflow.metadata[0].name
     annotations = {
       "iam.gke.io/gcp-service-account" = google_service_account.kubeflow_gcp_sa.email
     }
@@ -141,22 +150,23 @@ resource "google_service_account_iam_binding" "kubeflow_workload_identity" {
   role               = "roles/iam.workloadIdentityUser"
 
   members = [
-    "serviceAccount:${var.project_id}.svc.id.goog[${kubernetes_namespace.kubeflow.metadata[0].name}/${kubernetes_service_account.kubeflow_sa.metadata[0].name}]"
+    "serviceAccount:${var.project_id}.svc.id.goog[${kubernetes_namespace_v1.kubeflow.metadata[0].name}/${kubernetes_service_account_v1.kubeflow_sa.metadata[0].name}]"
   ]
 }
 
-# Create LoadBalancer service for Kubeflow Central Dashboard
-resource "kubernetes_service" "kubeflow_dashboard" {
+# Create ClusterIP service for Kubeflow Central Dashboard
+# For secure access, use kubectl port-forward instead of public LoadBalancer
+resource "kubernetes_service_v1" "kubeflow_dashboard" {
   metadata {
-    name      = "kubeflow-dashboard-lb"
-    namespace = kubernetes_namespace.kubeflow.metadata[0].name
+    name      = "kubeflow-dashboard-svc"
+    namespace = kubernetes_namespace_v1.kubeflow.metadata[0].name
     labels = {
       "app.kubernetes.io/name" = "kubeflow-dashboard"
     }
   }
 
   spec {
-    type = "LoadBalancer"
+    type = "ClusterIP"
 
     selector = {
       "app.kubernetes.io/name" = "centraldashboard"
@@ -166,11 +176,66 @@ resource "kubernetes_service" "kubeflow_dashboard" {
       port        = 80
       target_port = 8082
       protocol    = "TCP"
+      name        = "http"
     }
   }
 
   depends_on = [kubernetes_manifest.kubeflow_manifests]
 }
+
+# OPTIONAL: For production deployments with HTTPS, uncomment the configuration below
+# This creates an Ingress with Google-managed SSL certificate
+
+# Uncomment to enable HTTPS access via Ingress
+# resource "google_compute_global_address" "kubeflow_ip" {
+#   name = "${var.cluster_name}-kubeflow-ip"
+# }
+
+# resource "google_compute_managed_ssl_certificate" "kubeflow_cert" {
+#   name = "${var.cluster_name}-kubeflow-cert"
+#
+#   managed {
+#     domains = [var.domain]  # Set domain variable, e.g., "kubeflow.example.com"
+#   }
+# }
+
+# resource "kubernetes_ingress_v1" "kubeflow_ingress" {
+#   metadata {
+#     name      = "kubeflow-ingress"
+#     namespace = kubernetes_namespace_v1.kubeflow.metadata[0].name
+#     annotations = {
+#       "kubernetes.io/ingress.class"                    = "gce"
+#       "kubernetes.io/ingress.global-static-ip-name"   = google_compute_global_address.kubeflow_ip.name
+#       "ingress.gcp.kubernetes.io/pre-shared-cert"     = google_compute_managed_ssl_certificate.kubeflow_cert.name
+#       "kubernetes.io/ingress.allow-http"               = "false"  # Force HTTPS only
+#     }
+#   }
+#
+#   spec {
+#     rule {
+#       host = var.domain
+#       http {
+#         path {
+#           path      = "/*"
+#           path_type = "ImplementationSpecific"
+#           backend {
+#             service {
+#               name = kubernetes_service_v1.kubeflow_dashboard.metadata[0].name
+#               port {
+#                 number = 80
+#               }
+#             }
+#           }
+#         }
+#       }
+#     }
+#   }
+#
+#   depends_on = [
+#     kubernetes_service_v1.kubeflow_dashboard,
+#     google_compute_managed_ssl_certificate.kubeflow_cert
+#   ]
+# }
 
 # Create Cloud Storage bucket for Kubeflow artifacts
 resource "google_storage_bucket" "kubeflow_artifacts" {

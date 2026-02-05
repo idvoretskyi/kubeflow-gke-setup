@@ -29,13 +29,28 @@ sample-ml-app/
 
 ## Quick Start
 
-### 1. Install Dependencies
+### 1. Setup Secure Access to Kubeflow
+
+First, establish a secure connection to your Kubeflow dashboard:
+
+```bash
+# Get the port-forward command from Terraform outputs
+cd ../../terraform
+terraform output kubeflow_access_command
+
+# Or run directly
+kubectl port-forward -n kubeflow svc/kubeflow-dashboard-svc 8080:80
+```
+
+Keep this terminal running in the background. Your Kubeflow dashboard is now accessible at `http://localhost:8080`.
+
+### 2. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Generate Sample Data
+### 3. Generate Sample Data
 
 ```bash
 python data_generator.py
@@ -47,11 +62,11 @@ This creates several sample datasets:
 - **time_series_data.csv**: Time series forecasting (1000 time points)
 - **large_classification_data.csv**: Large dataset for stress testing (10000 samples, 20 features)
 
-### 3. Run the Pipeline
+### 4. Run the Pipeline
 
 ```bash
 python run_pipeline.py \
-    --kubeflow-endpoint http://YOUR_CLUSTER_IP \
+    --kubeflow-endpoint http://localhost:8080 \
     --bucket-name your-gcs-bucket \
     --data-file sample_datasets/classification_data.csv \
     --algorithm random_forest \
@@ -138,7 +153,7 @@ Each component has optimized resource requests and limits:
 ### Basic Binary Classification
 ```bash
 python run_pipeline.py \
-    --kubeflow-endpoint http://YOUR_CLUSTER_IP \
+    --kubeflow-endpoint http://localhost:8080 \
     --bucket-name your-gcs-bucket \
     --data-file sample_datasets/classification_data.csv
 ```
@@ -146,7 +161,7 @@ python run_pipeline.py \
 ### Multi-class Classification with Logistic Regression
 ```bash
 python run_pipeline.py \
-    --kubeflow-endpoint http://YOUR_CLUSTER_IP \
+    --kubeflow-endpoint http://localhost:8080 \
     --bucket-name your-gcs-bucket \
     --data-file sample_datasets/multiclass_data.csv \
     --algorithm logistic_regression \
@@ -156,7 +171,7 @@ python run_pipeline.py \
 ### Large Dataset Stress Test
 ```bash
 python run_pipeline.py \
-    --kubeflow-endpoint http://YOUR_CLUSTER_IP \
+    --kubeflow-endpoint http://localhost:8080 \
     --bucket-name your-gcs-bucket \
     --data-file sample_datasets/large_classification_data.csv \
     --algorithm random_forest \
@@ -167,7 +182,7 @@ python run_pipeline.py \
 
 | Parameter | Description | Default | Options |
 |-----------|-------------|---------|---------|
-| `kubeflow_endpoint` | Kubeflow dashboard URL | Required | http://YOUR_IP |
+| `kubeflow_endpoint` | Kubeflow dashboard URL | Required | http://localhost:8080 |
 | `bucket_name` | GCS bucket for artifacts | Required | your-bucket-name |
 | `data_file` | Path to training data | Required | *.csv file |
 | `algorithm` | ML algorithm to use | `random_forest` | `random_forest`, `logistic_regression` |

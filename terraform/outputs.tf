@@ -17,7 +17,7 @@ output "cluster_ca_certificate" {
 
 output "kubeconfig_command" {
   description = "Command to configure kubectl"
-  value       = "gcloud container clusters get-credentials ${module.gke.cluster_name} --region ${local.region} --project ${local.project_id}"
+  value       = "gcloud container clusters get-credentials ${module.gke.cluster_name} --zone ${local.zone} --project ${local.project_id}"
 }
 
 output "detected_config" {
@@ -25,24 +25,22 @@ output "detected_config" {
   value = {
     project_id = local.project_id
     region     = local.region
-    zones      = local.zones
+    zone       = local.zone
     account    = local.current_account
   }
 }
 
-output "kubeflow_endpoint" {
-  description = "Kubeflow dashboard endpoint"
-  value       = module.kubeflow.endpoint
+output "kubeflow_access_command" {
+  description = "Command to securely access Kubeflow dashboard"
+  value       = var.deploy_kubeflow ? module.kubeflow[0].port_forward_command : "Kubeflow not deployed"
 }
 
-output "estimated_monthly_cost" {
-  description = "Estimated monthly cost breakdown"
-  value = {
-    cluster_management_fee = "Free (GKE Autopilot charges apply only for running workloads)"
-    compute_cost_estimate  = "~$${(var.initial_node_count * (var.preemptible ? 25 : 73)) * 24 * 30 / 100} per month for ${var.initial_node_count} x ${var.machine_type} nodes"
-    storage_cost_estimate  = "~$${var.initial_node_count * var.disk_size_gb * 0.04} per month for persistent disks"
-    region                 = local.region
-    project                = local.project_id
-    note                   = "Actual costs may vary based on usage patterns and regional pricing"
-  }
+output "kubeflow_dashboard_url" {
+  description = "Local URL after running port-forward command"
+  value       = var.deploy_kubeflow ? module.kubeflow[0].dashboard_url : "Kubeflow not deployed"
+}
+
+output "kubernetes_version" {
+  description = "Kubernetes version running on the cluster"
+  value       = module.gke.cluster_version
 }

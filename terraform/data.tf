@@ -38,12 +38,11 @@ locals {
     local.region_from_zone != "" ? local.region_from_zone : var.region
   )
 
-  # Generate zones based on detected or configured region
-  zones = var.zones_override != null ? var.zones_override : [
-    "${local.region}-a",
-    "${local.region}-b",
-    "${local.region}-c"
-  ]
+  # Zone for zonal cluster deployment (required - only zonal clusters supported)
+  # Priority: explicit zone variable > detected zone from gcloud > default zone in region
+  zone = var.zone != "" ? var.zone : (
+    local.detected_zone != "" ? local.detected_zone : "${local.region}-b"
+  )
 
   # Account information for verification
   current_account = data.external.gcloud_account.result.account
