@@ -1,5 +1,5 @@
 kfp==2.14.6
-scikit-learn==1.6.1
+scikit-learn==1.8.0
 pandas==2.3.2
 numpy==2.0.2
 matplotlib==3.9.4
