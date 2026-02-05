@@ -9,8 +9,8 @@ resource "google_container_cluster" "primary" {
   remove_default_node_pool = true
   initial_node_count       = 1
 
-  # Network policy - disabled for learning mode (can cause conflicts with Dataplane V2)
-  # Enable manually for production use with proper Dataplane configuration
+  # Network policy - disabled (can cause conflicts with Dataplane V2)
+  # Enable for production use with proper Dataplane configuration
   # network_policy {
   #   enabled = true
   # }
@@ -23,14 +23,14 @@ resource "google_container_cluster" "primary" {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
 
-  # Binary authorization disabled for learning mode
-  # Uncomment for production use (requires Binary Authorization API)
+  # Binary authorization (requires Binary Authorization API)
+  # Uncomment to enable
   # binary_authorization {
   #   evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
   # }
 
-  # Resource usage export disabled for learning mode
-  # Uncomment for production cost tracking
+  # Resource usage export (for cost tracking)
+  # Uncomment to enable
   # resource_usage_export_config {
   #   enable_network_egress_metering       = true
   #   enable_resource_consumption_metering = true
@@ -46,7 +46,7 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  # Cluster autoscaling (node auto-provisioning) - disabled for simplicity in learning mode
+  # Cluster autoscaling (node auto-provisioning) - uncomment to enable
   # cluster_autoscaling {
   #   enabled = true
   #   auto_provisioning_defaults {
@@ -65,7 +65,7 @@ resource "google_container_cluster" "primary" {
   #   }
   # }
 
-  # Monitoring and logging - use defaults for learning mode
+  # Monitoring and logging - uncomment to customize
   # monitoring_config {
   #   enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
   # }
@@ -74,7 +74,7 @@ resource "google_container_cluster" "primary" {
   #   enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
   # }
 
-  # Cost management - disabled for learning mode (requires GKE Enterprise or additional setup)
+  # Cost management (requires GKE Enterprise or additional setup)
   # cost_management_config {
   #   enabled = true
   # }
@@ -84,7 +84,6 @@ resource "google_container_cluster" "primary" {
   subnetwork = "default"
 
   # Private cluster configuration
-  # For learning mode, private nodes can be disabled for easier access
   dynamic "private_cluster_config" {
     for_each = var.enable_private_nodes ? [1] : []
     content {
@@ -128,7 +127,6 @@ resource "google_container_cluster" "primary" {
     horizontal_pod_autoscaling {
       disabled = false
     }
-    # Network policy addon disabled for learning mode
     network_policy_config {
       disabled = true
     }
@@ -175,22 +173,18 @@ resource "google_container_node_pool" "primary_nodes" {
       enable_integrity_monitoring = true
     }
 
-    # Labels for cost tracking and learning mode identification
+    # Labels for cost tracking
     labels = {
-      env           = "kubeflow"
-      team          = "ml-platform"
-      cost-center   = "research"
-      learning-mode = var.learning_mode ? "enabled" : "disabled"
+      env         = "kubeflow"
+      team        = "ml-platform"
+      cost-center = "research"
     }
 
-    # Taints for Kubeflow workloads - disabled in learning mode for easier experimentation
-    dynamic "taint" {
-      for_each = var.learning_mode ? [] : [1]
-      content {
-        key    = "kubeflow"
-        value  = "true"
-        effect = "NO_SCHEDULE"
-      }
+    # Taint to ensure only Kubeflow workloads schedule on these nodes
+    taint {
+      key    = "kubeflow"
+      value  = "true"
+      effect = "NO_SCHEDULE"
     }
 
     # Metadata

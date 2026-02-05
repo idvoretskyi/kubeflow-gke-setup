@@ -79,13 +79,13 @@ variable "domain" {
 }
 
 # =============================================================================
-# GKE Version and Learning Mode Configuration
+# GKE Version and Cluster Configuration
 # =============================================================================
 
 variable "release_channel" {
   description = <<-EOT
     GKE release channel for automatic Kubernetes version management.
-    - RAPID: Latest K8s features (currently 1.35), best for learning/demos
+    - RAPID: Latest K8s features (currently 1.35)
     - REGULAR: Balanced stability and features (currently 1.33)
     - STABLE: Most stable, production-ready (currently 1.33)
   EOT
@@ -98,20 +98,8 @@ variable "release_channel" {
   }
 }
 
-variable "learning_mode" {
-  description = <<-EOT
-    Enable learning/demo mode for easier experimentation.
-    When enabled:
-    - Node taints are removed (pods can schedule without tolerations)
-    - Private endpoint is enabled for easier local access
-    - Simplified networking for beginners
-  EOT
-  type        = bool
-  default     = true
-}
-
 variable "enable_private_nodes" {
-  description = "Enable private nodes (no public IPs). Set to false for easier access during learning."
+  description = "Enable private nodes (no public IPs on nodes). Recommended for production."
   type        = bool
   default     = true
 }

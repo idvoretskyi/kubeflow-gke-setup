@@ -1,5 +1,5 @@
 output "endpoint" {
-  description = "Kubeflow dashboard endpoint"
+  description = "Kubeflow dashboard endpoint (WARNING: HTTP only, not suitable for production. Use HTTPS ingress or IAP for production deployments.)"
   value       = "http://${kubernetes_service_v1.kubeflow_dashboard.status[0].load_balancer[0].ingress[0].ip}"
 }
 

@@ -10,7 +10,6 @@
 
 # Optional variables with defaults
 cluster_name = "kubeflow-cluster"
-# zones_override = ["us-central1-a", "us-central1-b", "us-central1-c"]  # Auto-generated from region if not provided
 
 # =============================================================================
 # GKE VERSION AND RELEASE CHANNEL
@@ -21,16 +20,7 @@ cluster_name = "kubeflow-cluster"
 #   - STABLE:  Production-ready (1.33) - Most stable, fewer updates
 release_channel = "RAPID"  # Recommended for learning - get the latest K8s features!
 
-# =============================================================================
-# LEARNING MODE CONFIGURATION
-# =============================================================================
-# Enable learning mode for easier experimentation:
-#   - Removes node taints so pods can schedule without tolerations
-#   - Simplifies networking for beginners
-#   - Best for demos, tutorials, and learning Kubeflow
-learning_mode = true
-
-# Private nodes setting (set to false for easier local debugging)
+# Private nodes setting (recommended for production)
 enable_private_nodes = true
 
 # =============================================================================

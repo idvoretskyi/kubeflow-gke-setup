@@ -60,9 +60,8 @@ module "gke" {
   disk_size_gb = var.disk_size_gb
   oauth_scopes = var.oauth_scopes
 
-  # GKE version and learning mode
+  # GKE version and networking
   release_channel      = var.release_channel
-  learning_mode        = var.learning_mode
   enable_private_nodes = var.enable_private_nodes
 }
 

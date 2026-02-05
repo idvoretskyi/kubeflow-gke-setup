@@ -31,7 +31,7 @@ output "detected_config" {
 }
 
 output "kubeflow_endpoint" {
-  description = "Kubeflow dashboard endpoint"
+  description = "Kubeflow dashboard endpoint (WARNING: HTTP only, use kubectl port-forward for secure access or configure HTTPS ingress for production)"
   value       = module.kubeflow.endpoint
 }
 
@@ -48,7 +48,7 @@ output "estimated_monthly_cost" {
 }
 
 # =============================================================================
-# Learning Mode and Version Information
+# Version Information
 # =============================================================================
 
 output "kubernetes_version" {
@@ -59,18 +59,6 @@ output "kubernetes_version" {
 output "node_version" {
   description = "Kubernetes version running on the nodes"
   value       = module.gke.node_version
-}
-
-output "learning_mode_info" {
-  description = "Learning mode configuration details"
-  value = {
-    learning_mode_enabled = var.learning_mode
-    release_channel       = var.release_channel
-    spot_instances        = var.spot_instances
-    private_nodes         = var.enable_private_nodes
-    taints_disabled       = var.learning_mode
-    description           = var.learning_mode ? "Learning mode: Taints disabled, pods can schedule freely" : "Production mode: Kubeflow taint applied to nodes"
-  }
 }
 
 output "quick_start_commands" {
@@ -86,9 +74,10 @@ output "quick_start_commands" {
     # 3. Check Kubernetes version
     kubectl version
 
-    # 4. Access Kubeflow dashboard
-    kubectl port-forward svc/kubeflow-dashboard -n kubeflow 8080:80
+    # 4. Access Kubeflow dashboard (via port-forward)
+    kubectl port-forward svc/centraldashboard -n kubeflow 8080:8082
     # Then open: http://localhost:8080
+    # Or use the LoadBalancer: kubectl get svc kubeflow-dashboard-lb -n kubeflow
 
     # 5. List Kubeflow components
     kubectl get pods -n kubeflow
