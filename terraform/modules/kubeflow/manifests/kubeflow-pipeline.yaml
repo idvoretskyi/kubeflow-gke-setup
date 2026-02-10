@@ -24,7 +24,7 @@ spec:
       serviceAccountName: ml-pipeline
       containers:
       - name: ml-pipeline-api-server
-        image: gcr.io/ml-pipeline/api-server:2.0.5
+        image: gcr.io/ml-pipeline/api-server:2.15.0
         ports:
         - containerPort: 8888
         - containerPort: 8887
@@ -88,7 +88,7 @@ spec:
     spec:
       containers:
       - name: ml-pipeline-ui
-        image: gcr.io/ml-pipeline/frontend:2.0.5
+        image: gcr.io/ml-pipeline/frontend:2.15.0
         ports:
         - containerPort: 3000
         env:

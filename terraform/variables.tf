@@ -72,16 +72,30 @@ variable "oauth_scopes" {
   ]
 }
 
+variable "master_authorized_networks" {
+  description = "List of CIDR blocks authorized to access the Kubernetes master. Leave empty to disable external access to the master endpoint."
+  type = list(object({
+    cidr_block   = string
+    display_name = string
+  }))
+  default = []
+  validation {
+    condition = alltrue([
+      for network in var.master_authorized_networks :
+      can(cidrhost(network.cidr_block, 0))
+    ])
+    error_message = "All cidr_block values must be valid CIDR notation (e.g., '203.0.113.0/24')."
+  }
+}
+
 variable "domain" {
   description = "Domain name for Kubeflow (optional)"
   type        = string
   default     = ""
 }
-
 # =============================================================================
 # GKE Version and Cluster Configuration
 # =============================================================================
-
 variable "release_channel" {
   description = <<-EOT
     GKE release channel for automatic Kubernetes version management.
@@ -91,7 +105,6 @@ variable "release_channel" {
   EOT
   type        = string
   default     = "RAPID"
-
   validation {
     condition     = contains(["RAPID", "REGULAR", "STABLE", "UNSPECIFIED"], var.release_channel)
     error_message = "Release channel must be one of: RAPID, REGULAR, STABLE, UNSPECIFIED."
@@ -114,4 +127,30 @@ variable "deploy_kubeflow" {
   description = "Whether to deploy Kubeflow module"
   type        = bool
   default     = false
+}
+# =============================================================================
+# GPU Configuration
+# =============================================================================
+variable "enable_gpu" {
+  description = "Enable a GPU node pool for ML workloads"
+  type        = bool
+  default     = false
+}
+
+variable "gpu_type" {
+  description = "Type of GPU to use (e.g., nvidia-tesla-t4). Cheapest is nvidia-tesla-t4."
+  type        = string
+  default     = "nvidia-tesla-t4"
+}
+
+variable "gpu_count" {
+  description = "Number of GPUs per node"
+  type        = number
+  default     = 1
+}
+
+variable "gpu_machine_type" {
+  description = "Machine type for GPU nodes (must support GPUs, e.g., n1-standard-4). e2 instances do NOT support GPUs."
+  type        = string
+  default     = "n1-standard-4"
 }
