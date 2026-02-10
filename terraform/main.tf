@@ -59,6 +59,9 @@ module "gke" {
   gpu_type         = var.gpu_type
   gpu_count        = var.gpu_count
   gpu_machine_type = var.gpu_machine_type
+
+  # Master authorized networks configuration
+  master_authorized_networks = []
 }
 module "kubeflow" {
   source       = "./modules/kubeflow"
