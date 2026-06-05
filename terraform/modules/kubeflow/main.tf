@@ -1,6 +1,6 @@
 locals {
-  kubeflow_version  = "1.11.0"
-  kustomize_version = "5.0.1"
+  kubeflow_version  = "26.03"
+  kustomize_version = "5.8.1"
 }
 # Create namespace for Kubeflow
 resource "kubernetes_namespace_v1" "kubeflow" {
@@ -33,7 +33,7 @@ resource "helm_release" "cert_manager" {
   name       = "cert-manager"
   repository = "https://charts.jetstack.io"
   chart      = "cert-manager"
-  version    = "v1.16.1"
+  version    = "v1.19.4"
   namespace  = kubernetes_namespace_v1.cert_manager.metadata[0].name
   set = [
     {
@@ -52,7 +52,7 @@ resource "helm_release" "istio_base" {
   name       = "istio-base"
   repository = "https://istio-release.storage.googleapis.com/charts"
   chart      = "base"
-  version    = "1.28.0"
+  version    = "1.29.0"
   namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
   depends_on = [kubernetes_namespace_v1.istio_system]
 }
@@ -60,7 +60,7 @@ resource "helm_release" "istiod" {
   name       = "istiod"
   repository = "https://istio-release.storage.googleapis.com/charts"
   chart      = "istiod"
-  version    = "1.28.0"
+  version    = "1.29.0"
   namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
   depends_on = [helm_release.istio_base]
 }

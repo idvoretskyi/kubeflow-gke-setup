@@ -1,6 +1,6 @@
 # Kubeflow on GKE
 
-Deploy a production-ready Kubeflow 1.11.0 environment on Google Kubernetes Engine using Terraform. This setup is cost-optimized using Spot VMs and GKE autoscaling.
+Deploy a production-ready Kubeflow 26.03 environment on Google Kubernetes Engine using Terraform. This setup is cost-optimized using Spot VMs and GKE autoscaling.
 
 ## Quick Start
 
@@ -27,8 +27,8 @@ Deploy a production-ready Kubeflow 1.11.0 environment on Google Kubernetes Engin
 
 ## Infrastructure
 - **GKE Cluster**: Zonal cluster with Spot VMs and 1-10 nodes autoscaling.
-- **Kubeflow 1.11.0**: Includes Jupyter, Pipelines, Katib, and KServe.
-- **Service Mesh**: Istio 1.28.0 and cert-manager 1.16.1.
+- **Kubeflow 26.03 baseline**: Includes Jupyter, Pipelines, Katib, and KServe.
+- **Service Mesh**: Istio 1.29.0 and cert-manager 1.19.4.
 - **Security**: Private nodes, Workload Identity, and shielded nodes.
 - **Cost**: Estimated $30-100/month (60-91% savings vs on-demand).
 
@@ -81,6 +81,8 @@ To remove all resources and stop billing:
 cd terraform
 terraform destroy
 ```
+
+The repository also includes automated stale pull request cleanup in `.github/workflows/stale-pr-cleanup.yml`.
 
 ## License
 MIT License. See [LICENSE](LICENSE) for details.
