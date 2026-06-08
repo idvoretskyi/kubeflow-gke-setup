@@ -1,6 +1,6 @@
 # Kubeflow on GKE
 
-Deploy a production-ready Kubeflow 1.11.0 environment on Google Kubernetes Engine using Terraform. This setup is cost-optimized using Spot VMs and GKE autoscaling.
+Deploy a production-ready Kubeflow 26.03 baseline environment on Google Kubernetes Engine using Terraform. This setup is cost-optimized using Spot VMs and GKE autoscaling.
 
 ## Quick Start
 
@@ -27,8 +27,8 @@ Deploy a production-ready Kubeflow 1.11.0 environment on Google Kubernetes Engin
 
 ## Infrastructure
 - **GKE Cluster**: Zonal cluster with Spot VMs and 1-10 nodes autoscaling.
-- **Kubeflow 1.11.0**: Includes Jupyter, Pipelines, Katib, and KServe.
-- **Service Mesh**: Istio 1.28.0 and cert-manager 1.16.1.
+- **Kubeflow 26.03 baseline**: Includes Jupyter, Pipelines, Katib, and KServe.
+- **Service Mesh**: Istio 1.29.0 and cert-manager 1.19.4.
 - **Security**: Private nodes, Workload Identity, and shielded nodes.
 - **Cost**: Estimated $30-100/month (60-91% savings vs on-demand).
 
@@ -84,3 +84,9 @@ terraform destroy
 
 ## License
 MIT License. See [LICENSE](LICENSE) for details.
+
+## Repository Automation
+
+- **CI**: Python syntax check, Terraform fmt/validate, and required-files checks run on every push and pull request.
+- **Dependabot**: Automated dependency updates for Terraform providers, GitHub Actions, and pip packages, with auto-approve for minor/patch bumps.
+- **Stale PR cleanup**: Pull requests with no activity for 45 days are automatically marked stale; they are closed after a further 7 days. Issues are not affected. The workflow runs daily and can also be triggered manually (`workflow_dispatch`). See [`.github/workflows/stale-pr-cleanup.yml`](.github/workflows/stale-pr-cleanup.yml).
