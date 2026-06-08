@@ -88,5 +88,5 @@ MIT License. See [LICENSE](LICENSE) for details.
 ## Repository Automation
 
 - **CI**: Python syntax check, Terraform fmt/validate, and required-files checks run on every push and pull request.
-- **Dependabot**: Automated dependency updates for GitHub Actions and pip packages, with auto-approve for minor/patch bumps.
+- **Dependabot**: Automated dependency updates for Terraform providers, GitHub Actions, and pip packages, with auto-approve for minor/patch bumps.
 - **Stale PR cleanup**: Pull requests with no activity for 45 days are automatically marked stale; they are closed after a further 7 days. Issues are not affected. The workflow runs daily and can also be triggered manually (`workflow_dispatch`). See [`.github/workflows/stale-pr-cleanup.yml`](.github/workflows/stale-pr-cleanup.yml).
